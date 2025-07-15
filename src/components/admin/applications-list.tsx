@@ -1,62 +1,58 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { useState, useEffect } from 'react';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import type { Driver } from '@/lib/types';
 import { ApplicationsTable } from './applications-table';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertCircle } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertTriangle } from 'lucide-react';
+import type { Driver } from '@/lib/types';
 
 export function ApplicationsList() {
   const [applications, setApplications] = useState<Driver[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const q = query(collection(db, 'drivers'), where('operationalStatus', '==', 'pending_validation'));
-
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const apps: Driver[] = [];
-      querySnapshot.forEach((doc) => {
-        apps.push({ uid: doc.id, ...doc.data() } as Driver);
-      });
+  const fetchApplications = async () => {
+    setIsLoading(true);
+    try {
+      const q = query(
+        collection(db, 'drivers'),
+        where('operationalStatus', '==', 'pending_validation')
+      );
+      const querySnapshot = await getDocs(q);
+      const apps = querySnapshot.docs.map((doc) => doc.data() as Driver);
       setApplications(apps);
-      setLoading(false);
-    }, (err) => {
-      console.error("Error fetching applications: ", err);
-      setError("No se pudieron cargar las solicitudes. Revisa tu conexión y la configuración de Firestore.");
-      setLoading(false);
-    });
+    } catch (err) {
+      console.error('Error fetching applications:', err);
+      setError('No se pudieron cargar las solicitudes.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    // Cleanup subscription on unmount
-    return () => unsubscribe();
+  useEffect(() => {
+    fetchApplications();
   }, []);
 
-  return (
-    <Card className="glass-card">
-      <CardHeader>
-        <CardTitle>Nuevas Solicitudes</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {loading ? (
-          <div className="space-y-2">
-            <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-12 w-full" />
-          </div>
-        ) : error ? (
-           <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Error al Cargar</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        ) : (
-          <ApplicationsTable applications={applications} />
-        )}
-      </CardContent>
-    </Card>
-  );
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-48">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    );
+  }
+
+  return <ApplicationsTable applications={applications} onApplicationUpdate={fetchApplications} />;
 }

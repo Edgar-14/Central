@@ -1,15 +1,13 @@
-// @ts-check
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'i.ibb.co',
+        hostname: 'firebasestorage.googleapis.com',
       },
     ],
   },
 };
 
-export default nextConfig;
+module.exports = nextConfig;
