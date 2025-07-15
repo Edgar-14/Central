@@ -6,13 +6,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { Loader2, UploadCloud, FileText, Video, Award, Send, CheckCircle } from 'lucide-react';
+import { Loader2, UploadCloud, FileText, Video, Award, Send, CheckCircle, Download } from 'lucide-react';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth, storage } from '@/lib/firebase';
 import { getFunctions, httpsCallable } from 'firebase/functions';
@@ -31,7 +32,7 @@ const steps = [
   { id: 5, name: 'Envío', icon: Award },
 ];
 
-const fileSchema = z.any().refine(file => file instanceof File, 'Se requiere un archivo.');
+const fileSchema = z.any().optional();
 
 const formSchema = z.object({
   // Step 1
@@ -62,32 +63,34 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-const documents = [
-  { name: 'INE/Pasaporte', id: 'ineUrl' as const },
-  { name: 'Licencia de Conducir', id: 'licenseUrl' as const },
-  { name: 'Comprobante de Domicilio', id: 'addressProofUrl' as const },
-  { name: 'Constancia de Situación Fiscal', id: 'taxIdUrl' as const },
-  { name: 'Tarjeta de Circulación', id: 'circulationCardUrl' as const },
-  { name: 'Póliza de Seguro Vehicular', id: 'insuranceUrl' as const },
+const documents: { name: string; id: keyof FormData }[] = [
+    { name: 'INE/Pasaporte', id: 'ineUrl' },
+    { name: 'Licencia de Conducir', id: 'licenseUrl' },
+    { name: 'Comprobante de Domicilio', id: 'addressProofUrl' },
+    { name: 'Constancia de Situación Fiscal', id: 'taxIdUrl' },
+    { name: 'Tarjeta de Circulación', id: 'circulationCardUrl' },
+    { name: 'Póliza de Seguro Vehicular', id: 'insuranceUrl' },
 ];
 
 const trainingModules = [
-    { id: 'module1', title: 'Introducción a BeFast y Nuestra App', duration: '5 min' },
-    { id: 'module2', title: 'Manejo de Pedidos y Tiempos de Entrega', duration: '10 min' },
-    { id: 'module3', title: 'Protocolos de Seguridad y Emergencias', duration: '8 min' },
-    { id: 'module4', title: 'Uso de la Billetera y Sistema de Pagos', duration: '7 min' },
-    { id: 'module5', title: 'Cuestionario de Evaluación Final', duration: '15 min' },
-]
+    { id: 'module1', title: 'Introducción a BeFast y Nuestra App', duration: '5 min', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+    { id: 'module2', title: 'Manejo de Pedidos y Tiempos de Entrega', duration: '10 min', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+    { id: 'module3', title: 'Protocolos de Seguridad y Emergencias', duration: '8 min', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+    { id: 'module4', title: 'Uso de la Billetera y Sistema de Pagos', duration: '7 min', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+    { id: 'module5', title: 'Cuestionario de Evaluación Final', duration: '15 min', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+];
+
+const contractUrl = "https://firebasestorage.googleapis.com/v0/b/befast-central.appspot.com/o/legal%2FContrato-BeFast-Repartidor-Ejemplo.pdf?alt=media&token=e9e6a9a4-6b21-4d38-8e6e-21e3c83b8b05";
 
 export function RegistrationForm() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [completedModules, setCompletedModules] = useState<Set<string>>(new Set());
+  const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const { toast } = useToast();
   const router = useRouter();
 
   const allModulesCompleted = useMemo(() => completedModules.size === trainingModules.length, [completedModules]);
-
 
   const methods = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -115,13 +118,13 @@ export function RegistrationForm() {
       fieldsToValidate = ['email', 'password', 'confirmPassword', 'fullName', 'phone', 'curp', 'rfc', 'nss', 'address'];
     }
      if (currentStep === 2) {
-      fieldsToValidate = documents.map(d => d.id);
+      // Step 2 is now optional
     }
     if (currentStep === 3) {
       fieldsToValidate = ['acceptContract', 'acceptSignature', 'signatureName'];
     }
 
-    const isValid = await methods.trigger(fieldsToValidate);
+    const isValid = fieldsToValidate.length > 0 ? await methods.trigger(fieldsToValidate) : true;
     
     if (isValid) {
        if (currentStep === 4 && !allModulesCompleted) {
@@ -156,7 +159,8 @@ export function RegistrationForm() {
     });
   }
 
-  const uploadFile = async (file: File, path: string): Promise<string> => {
+  const uploadFile = async (file: File | undefined, path: string): Promise<string | undefined> => {
+    if (!file) return undefined;
     const storageRef = ref(storage, path);
     await uploadBytes(storageRef, file);
     return getDownloadURL(storageRef);
@@ -166,7 +170,7 @@ export function RegistrationForm() {
     if(currentStep !== 5) return; // Only submit on the last step
     setIsLoading(true);
     try {
-      // 1. Create user in Firebase Auth (triggers setupnewuser)
+      // 1. Create user in Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
       const user = userCredential.user;
       const uid = user.uid;
@@ -176,11 +180,14 @@ export function RegistrationForm() {
       
       // 3. Upload documents to Cloud Storage
       const documentUrls: { [key: string]: string } = {};
-       for (const doc of documents) {
-          const file = data[doc.id];
-          if (file instanceof File) {
+      for (const doc of documents) {
+          const file = data[doc.id] as File | undefined;
+          if (file) {
             const path = `drivers/${uid}/${doc.id}_${file.name}`;
-            documentUrls[doc.id] = await uploadFile(file, path);
+            const url = await uploadFile(file, path);
+            if (url) {
+                documentUrls[doc.id] = url;
+            }
           }
       }
 
@@ -226,6 +233,26 @@ export function RegistrationForm() {
 
   return (
     <FormProvider {...methods}>
+      <Dialog open={!!selectedVideo} onOpenChange={(isOpen) => !isOpen && setSelectedVideo(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Módulo de Capacitación</DialogTitle>
+            <DialogDescription>Completa el video para continuar.</DialogDescription>
+          </DialogHeader>
+          {selectedVideo && (
+            <div className="aspect-video">
+                <iframe
+                className="w-full h-full rounded-md"
+                src={selectedVideo}
+                title="YouTube video player"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              ></iframe>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
       <div className="space-y-8">
         <div>
           <Progress value={progress} className="h-2" />
@@ -293,16 +320,28 @@ export function RegistrationForm() {
               <h3 className="text-xl font-semibold">3. Contratación y Acuerdos Legales</h3>
               <Card>
                 <CardHeader>
-                  <CardTitle>Contrato Individual de Trabajo</CardTitle>
-                  <CardDescription>Revisa el contrato y sus anexos. Al continuar, aceptas los términos.</CardDescription>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <CardTitle>Contrato Individual de Trabajo</CardTitle>
+                      <CardDescription>Revisa el contrato y sus anexos.</CardDescription>
+                    </div>
+                    <a href={contractUrl} target="_blank" rel="noopener noreferrer">
+                      <Button variant="outline" size="sm">
+                        <Download className="mr-2 h-4 w-4" />
+                        Descargar PDF
+                      </Button>
+                    </a>
+                  </div>
                 </CardHeader>
                 <CardContent className="p-2">
-                  <div className="w-full h-96 border rounded-md">
-                    <iframe 
-                      src="https://firebasestorage.googleapis.com/v0/b/befast-central.appspot.com/o/legal%2FContrato-BeFast-Repartidor-Ejemplo.pdf?alt=media&token=e9e6a9a4-6b21-4d38-8e6e-21e3c83b8b05" 
-                      className="w-full h-full"
-                      title="Contrato de Repartidor"
-                    />
+                  <div className="w-full h-96 border rounded-md p-4 overflow-y-auto text-sm bg-white dark:bg-gray-800">
+                    <h4 className="font-bold text-center mb-4">CONTRATO INDIVIDUAL DE TRABAJO POR TIEMPO INDETERMINADO</h4>
+                    <p className="mb-2"><strong>Declaraciones:</strong></p>
+                    <p className="mb-2">I. "El Patrón" declara ser una sociedad mercantil debidamente constituida conforme a las leyes de los Estados Unidos Mexicanos.</p>
+                    <p className="mb-4">II. "El Trabajador" declara por su propio derecho ser una persona física de nacionalidad mexicana, con la capacidad legal para obligarse en los términos del presente contrato.</p>
+                    <p className="mb-2"><strong>Cláusulas:</strong></p>
+                    <p className="mb-2"><strong>PRIMERA.- Objeto.</strong> El presente contrato tiene por objeto establecer los términos y condiciones bajo los cuales "El Trabajador" prestará sus servicios personales subordinados a "El Patrón" en la posición de Repartidor...</p>
+                    <p>[... resto del contenido del contrato ...]</p>
                   </div>
                 </CardContent>
               </Card>
@@ -327,7 +366,7 @@ export function RegistrationForm() {
           {currentStep === 4 && (
              <div className="space-y-6">
                 <h3 className="text-xl font-semibold">4. Capacitación Obligatoria</h3>
-                <p className="text-muted-foreground">Marca cada módulo como completado para poder continuar.</p>
+                <p className="text-muted-foreground">Completa cada módulo y márcalo para poder continuar.</p>
                 <div className="space-y-3">
                     {trainingModules.map((module, index) => (
                         <Card key={module.id} className={cn("transition-all", completedModules.has(module.id) && "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800")}>
@@ -341,11 +380,14 @@ export function RegistrationForm() {
                                         <p className="text-sm text-muted-foreground">{module.duration}</p>
                                     </div>
                                 </div>
-                                <Checkbox 
-                                    className="h-6 w-6"
-                                    checked={completedModules.has(module.id)}
-                                    onCheckedChange={() => toggleModuleCompletion(module.id)}
-                                />
+                                <div className="flex items-center gap-2">
+                                    <Button type="button" variant="secondary" size="sm" onClick={() => setSelectedVideo(module.videoUrl)}>Ver Módulo</Button>
+                                    <Checkbox 
+                                        className="h-6 w-6"
+                                        checked={completedModules.has(module.id)}
+                                        onCheckedChange={() => toggleModuleCompletion(module.id)}
+                                    />
+                                </div>
                             </CardContent>
                         </Card>
                     ))}
