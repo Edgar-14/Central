@@ -92,7 +92,7 @@ export function LoginForm() {
             <FormItem>
               <FormLabel>Correo Electrónico</FormLabel>
               <FormControl>
-                <Input placeholder="tu@correo.com" {...field} />
+                <Input placeholder="tu@correo.com" {...field} className="bg-white/10 border-white/20 placeholder:text-gray-300" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -105,7 +105,7 @@ export function LoginForm() {
             <FormItem>
               <FormLabel>Contraseña</FormLabel>
               <FormControl>
-                <Input type="password" placeholder="••••••••" {...field} />
+                <Input type="password" placeholder="••••••••" {...field} className="bg-white/10 border-white/20 placeholder:text-gray-300" />
               </FormControl>
               <FormMessage />
             </FormItem>

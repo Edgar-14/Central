@@ -19,7 +19,7 @@ export default function LoginPage() {
                 <Logo />
              </div>
             <CardTitle className="text-2xl">Bienvenido de Nuevo</CardTitle>
-            <CardDescription>Ingresa a tu portal de repartidor o administrador.</CardDescription>
+            <CardDescription>Ingresa a tu portal para continuar.</CardDescription>
           </CardHeader>
           <CardContent>
             <LoginForm />
