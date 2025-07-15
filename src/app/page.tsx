@@ -49,15 +49,24 @@ export default function Home() {
   ];
 
   const sliderImages = [
-    { src: "https://i.ibb.co/VW4ZqcM/226-A1904.jpg", alt: "Repartidor con casco" },
-    { src: "https://i.ibb.co/nNmzs9X/226-A1559.jpg", alt: "Repartidor de BeFast" },
-    { src: "https://i.ibb.co/4w1mgLt/IMG-9827.jpg", alt: "Platillo preparado" },
-    { src: "https://i.ibb.co/cKszc4J/IMG-9831.jpg", alt: "Empaquetado de comida" },
-    { src: "https://i.ibb.co/yccp3tv/IMG-9899.jpg", alt: "Preparación de comida" },
-    { src: "https://i.ibb.co/ycW9rS2/IMG-9924.jpg", alt: "Repartidor con entrega" },
-    { src: "https://i.ibb.co/XfJ50PL/226-A1568.jpg", alt: "Cocina de restaurante" },
-    { src: "https://i.ibb.co/cXVx3F8/226-A1715.jpg", alt: "Repartidor sonriendo" },
-    { src: "https://i.ibb.co/RTy11HM/226-A1953.jpg", alt: "Persona conduciendo" }
+    { src: "https://placehold.co/800x600.png", alt: "Repartidor con casco", "data-ai-hint": "delivery driver" },
+    { src: "https://placehold.co/800x600.png", alt: "Repartidor de BeFast", "data-ai-hint": "delivery courier" },
+    { src: "https://placehold.co/800x600.png", alt: "Platillo preparado", "data-ai-hint": "food plate" },
+    { src: "https://placehold.co/800x600.png", alt: "Empaquetado de comida", "data-ai-hint": "food packaging" },
+    { src: "https://placehold.co/800x600.png", alt: "Preparación de comida", "data-ai-hint": "food preparation" },
+    { src: "https://placehold.co/800x600.png", alt: "Repartidor con entrega", "data-ai-hint": "courier delivery" },
+    { src: "https://placehold.co/800x600.png", alt: "Cocina de restaurante", "data-ai-hint": "restaurant kitchen" },
+    { src: "https://placehold.co/800x600.png", alt: "Repartidor sonriendo", "data-ai-hint": "happy courier" },
+    { src: "https://placehold.co/800x600.png", alt: "Persona conduciendo", "data-ai-hint": "person driving" },
+    { src: "https://placehold.co/800x600.png", alt: "Entrega en puerta", "data-ai-hint": "door delivery" },
+    { src: "https://placehold.co/800x600.png", alt: "Comida en bolsa", "data-ai-hint": "food bag" },
+    { src: "https://placehold.co/800x600.png", alt: "Repartidor en moto", "data-ai-hint": "motorcycle courier" },
+    { src: "https://placehold.co/800x600.png", alt: "Mapa de ciudad", "data-ai-hint": "city map" },
+    { src: "https://placehold.co/800x600.png", alt: "Cliente recibiendo pedido", "data-ai-hint": "customer order" },
+    { src: "https://placehold.co/800x600.png", alt: "Mochila de repartidor", "data-ai-hint": "delivery backpack" },
+    { src: "https://placehold.co/800x600.png", alt: "Teléfono con app", "data-ai-hint": "phone app" },
+    { src: "https://placehold.co/800x600.png", alt: "Restaurante", "data-ai-hint": "restaurant facade" },
+    { src: "https://placehold.co/800x600.png", alt: "Comida para llevar", "data-ai-hint": "takeaway food" }
   ];
 
   return (
@@ -80,16 +89,7 @@ export default function Home() {
 
       <main className="flex-1">
         <section className="relative w-full overflow-hidden py-20 md:py-32">
-          <div className="absolute inset-0 z-0">
-            <Image
-              src="https://i.ibb.co/9HnQNc4/Fondo-Befast-1.jpg"
-              alt="BeFast delivery driver"
-              fill
-              priority
-              sizes="100vw"
-              style={{ objectFit: 'cover' }}
-              className="opacity-20"
-            />
+           <div className="absolute inset-0 z-0 bg-background">
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent"></div>
           </div>
           
@@ -148,6 +148,7 @@ export default function Home() {
                                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                   style={{ objectFit: 'cover' }}
                                   className="transition-transform duration-500 hover:scale-110"
+                                  {...(image['data-ai-hint'] && { 'data-ai-hint': image['data-ai-hint'] })}
                               />
                               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
                             </div>
