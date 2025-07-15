@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Loader2, User, ShieldCheck, MoreVertical, Ban, UserX } from 'lucide-react';
+import { Loader2, User, ShieldCheck, MoreVertical, Ban, UserX, AlertTriangle } from 'lucide-react';
 import type { Driver } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
@@ -50,11 +50,10 @@ export function DriversList() {
   const handleDriverAction = async (action: 'suspend' | 'restrict', driverId: string, driverName: string) => {
     setIsProcessing(driverId);
     try {
-        let response;
         if (action === 'suspend') {
-            response = await suspendDriver({ driverId });
+            await suspendDriver({ driverId }); // driverId is the email
         } else {
-            response = await restrictDriver({ driverId });
+            await restrictDriver({ driverId }); // driverId is the email
         }
         toast({
             title: 'Acción completada',
@@ -62,11 +61,11 @@ export function DriversList() {
         });
         // Refresh list after action
         fetchActiveDrivers();
-    } catch (err) {
+    } catch (err: any) {
         console.error(`Failed to ${action} driver:`, err);
         toast({
             title: 'Error',
-            description: `No se pudo completar la acción para ${driverName}.`,
+            description: `No se pudo completar la acción para ${driverName}. ${err.message}`,
             variant: 'destructive'
         });
     } finally {
@@ -112,9 +111,9 @@ export function DriversList() {
           <TableBody>
             {drivers.length > 0 ? (
               drivers.map((driver) => (
-                <TableRow key={driver.uid}>
-                  <TableCell className="font-medium">{driver.personalInfo.fullName}</TableCell>
-                  <TableCell>{driver.personalInfo.email}</TableCell>
+                <TableRow key={driver.email}>
+                  <TableCell className="font-medium">{driver.fullName}</TableCell>
+                  <TableCell>{driver.email}</TableCell>
                   <TableCell>
                     <Badge variant={
                         driver.operationalStatus === 'active' ? 'default' 
@@ -130,16 +129,16 @@ export function DriversList() {
                    <TableCell className="text-right">
                      <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" disabled={isProcessing === driver.uid}>
-                                {isProcessing === driver.uid ? <Loader2 className="h-4 w-4 animate-spin" /> : <MoreVertical className="h-4 w-4" />}
+                            <Button variant="ghost" size="icon" disabled={isProcessing === driver.email}>
+                                {isProcessing === driver.email ? <Loader2 className="h-4 w-4 animate-spin" /> : <MoreVertical className="h-4 w-4" />}
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
-                            <DropdownMenuItem onClick={() => handleDriverAction('restrict', driver.uid, driver.personalInfo.fullName)}>
+                            <DropdownMenuItem onClick={() => handleDriverAction('restrict', driver.email, driver.fullName)}>
                                 <Ban className="mr-2 h-4 w-4" />
                                 Restringir por Deuda
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDriverAction('suspend', driver.uid, driver.personalInfo.fullName)} className="text-destructive">
+                            <DropdownMenuItem onClick={() => handleDriverAction('suspend', driver.email, driver.fullName)} className="text-destructive">
                                 <UserX className="mr-2 h-4 w-4" />
                                 Suspender Cuenta
                             </DropdownMenuItem>

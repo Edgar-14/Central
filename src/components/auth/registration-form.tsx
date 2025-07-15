@@ -18,6 +18,7 @@ import { auth, storage } from '@/lib/firebase';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { cn } from '@/lib/utils';
+import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 
 const functions = getFunctions();
 const submitApplication = httpsCallable(functions, 'submitapplication');
@@ -168,6 +169,7 @@ export function RegistrationForm() {
       // 1. Create user in Firebase Auth (triggers setupnewuser)
       const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
       const user = userCredential.user;
+      const uid = user.uid;
 
       // 2. Update user profile
       await updateProfile(user, { displayName: data.fullName });
@@ -177,7 +179,7 @@ export function RegistrationForm() {
        for (const doc of documents) {
           const file = data[doc.id];
           if (file instanceof File) {
-            const path = `drivers/${user.uid}/${doc.id}_${file.name}`;
+            const path = `drivers/${uid}/${doc.id}_${file.name}`;
             documentUrls[doc.id] = await uploadFile(file, path);
           }
       }

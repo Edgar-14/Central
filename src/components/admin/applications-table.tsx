@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { Driver } from '@/lib/types';
 import { ApplicationReviewModal } from './application-review-modal';
-import { format } from 'date-fns';
+import { format, toDate } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 interface ApplicationsTableProps {
@@ -48,11 +48,11 @@ export function ApplicationsTable({ applications, onApplicationUpdate }: Applica
         </TableHeader>
         <TableBody>
           {applications.map((driver) => (
-            <TableRow key={driver.uid}>
-              <TableCell className="font-medium">{driver.personalInfo.fullName}</TableCell>
-              <TableCell className="hidden md:table-cell">{driver.personalInfo.email}</TableCell>
+            <TableRow key={driver.email}>
+              <TableCell className="font-medium">{driver.fullName}</TableCell>
+              <TableCell className="hidden md:table-cell">{driver.email}</TableCell>
               <TableCell className="hidden lg:table-cell">
-                {driver.applicationSubmittedAt ? format(new Date(driver.applicationSubmittedAt.seconds * 1000), "d 'de' MMMM, yyyy", { locale: es }) : 'N/A'}
+                {driver.applicationSubmittedAt ? format(toDate(driver.applicationSubmittedAt.seconds * 1000), "d 'de' MMMM, yyyy", { locale: es }) : 'N/A'}
               </TableCell>
               <TableCell className="hidden md:table-cell">
                 <Badge variant="outline">{driver.vehicleInfo?.type || 'No especificado'}</Badge>

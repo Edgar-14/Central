@@ -37,23 +37,17 @@ export function ApplicationReviewModal({ driver, isOpen, onClose, onApplicationU
 
       if (action === 'approve') {
         await approveApplication({ email: driverEmail });
-      } else {
-        // This function does not exist in the provided functions code, but we assume it would work this way
-        // Let's create a placeholder for it
-        // await rejectApplication({ email: driverEmail });
         toast({
-            title: "Función no implementada",
-            description: "La función para rechazar aún no está conectada.",
-            variant: "destructive"
+          title: `Solicitud Aprobada`,
+          description: `El repartidor ${driver.fullName} ha sido activado.`,
         });
-        // For now, just log and close
-        console.log(`Action 'reject' for ${driverEmail}`);
+      } else {
+        await rejectApplication({ email: driverEmail });
+        toast({
+            title: "Solicitud Rechazada",
+            description: `La solicitud de ${driver.fullName} ha sido rechazada.`,
+        });
       }
-
-      toast({
-        title: `Solicitud ${action === 'approve' ? 'Aprobada' : 'Procesada'}`,
-        description: `El repartidor ${driver.fullName} ha sido ${action === 'approve' ? 'activado' : 'marcado para rechazo'}.`,
-      });
       
       onApplicationUpdate(); // Refresh the list in the parent component
       onClose(); // Close the modal

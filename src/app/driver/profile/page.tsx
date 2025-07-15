@@ -18,11 +18,11 @@ export default function DriverProfilePage() {
     const fetchDriverProfile = async () => {
       try {
         const currentUser = auth.currentUser;
-        if (!currentUser) {
-          throw new Error('No estás autenticado.');
+        if (!currentUser || !currentUser.email) {
+          throw new Error('No estás autenticado o tu email no está disponible.');
         }
 
-        const driverDocRef = doc(db, 'drivers', currentUser.uid);
+        const driverDocRef = doc(db, 'drivers', currentUser.email);
         const driverDocSnap = await getDoc(driverDocRef);
 
         if (!driverDocSnap.exists()) {
@@ -81,13 +81,13 @@ export default function DriverProfilePage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
-            <p><strong>Nombre:</strong> {driver.personalInfo.fullName}</p>
-            <p><strong>Email:</strong> {driver.personalInfo.email}</p>
-            <p><strong>Teléfono:</strong> {driver.personalInfo.phone}</p>
-            <p><strong>Dirección:</strong> {driver.personalInfo.address}</p>
-            <p><strong>CURP:</strong> {driver.personalInfo.curp}</p>
-            <p><strong>RFC:</strong> {driver.personalInfo.rfc}</p>
-            <p><strong>NSS:</strong> {driver.personalInfo.nss}</p>
+            <p><strong>Nombre:</strong> {driver.personalInfo?.fullName}</p>
+            <p><strong>Email:</strong> {driver.personalInfo?.email}</p>
+            <p><strong>Teléfono:</strong> {driver.personalInfo?.phone}</p>
+            <p><strong>Dirección:</strong> {driver.personalInfo?.address}</p>
+            <p><strong>CURP:</strong> {driver.personalInfo?.curp}</p>
+            <p><strong>RFC:</strong> {driver.personalInfo?.rfc}</p>
+            <p><strong>NSS:</strong> {driver.personalInfo?.nss}</p>
           </CardContent>
         </Card>
 
@@ -100,9 +100,9 @@ export default function DriverProfilePage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
-            <p><strong>Tipo:</strong> {driver.vehicleInfo.type}</p>
-            <p><strong>Marca y Modelo:</strong> {driver.vehicleInfo.brand}</p>
-            <p><strong>Placa:</strong> {driver.vehicleInfo.plate}</p>
+            <p><strong>Tipo:</strong> {driver.vehicleInfo?.type}</p>
+            <p><strong>Marca y Modelo:</strong> {driver.vehicleInfo?.brand}</p>
+            <p><strong>Placa:</strong> {driver.vehicleInfo?.plate}</p>
           </CardContent>
         </Card>
       </div>
@@ -116,8 +116,8 @@ export default function DriverProfilePage() {
             </div>
         </CardHeader>
         <CardContent className="text-sm">
-            <p><strong>Versión de Contrato:</strong> {driver.legal.contractVersion}</p>
-            <p><strong>Fecha de Firma:</strong> {driver.legal.signatureTimestamp ? new Date(driver.legal.signatureTimestamp).toLocaleString('es-MX') : 'No registrada'}</p>
+            <p><strong>Versión de Contrato:</strong> {driver.legal?.contractVersion}</p>
+            <p><strong>Fecha de Firma:</strong> {driver.legal?.signatureTimestamp ? new Date(driver.legal.signatureTimestamp).toLocaleString('es-MX') : 'No registrada'}</p>
         </CardContent>
       </Card>
       

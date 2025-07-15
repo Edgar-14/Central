@@ -9,6 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Loader2, AlertTriangle } from 'lucide-react';
 import type { Driver, Transaction } from '@/lib/types';
+import { toDate } from 'date-fns';
 
 export function DriverWallet() {
   const [driver, setDriver] = useState<Driver | null>(null);
@@ -20,12 +21,12 @@ export function DriverWallet() {
     const fetchDriverData = async () => {
       try {
         const currentUser = auth.currentUser;
-        if (!currentUser) {
+        if (!currentUser || !currentUser.email) {
           throw new Error('No estás autenticado.');
         }
 
-        // Fetch driver document
-        const driverDocRef = doc(db, 'drivers', currentUser.uid);
+        // Fetch driver document using email as ID
+        const driverDocRef = doc(db, 'drivers', currentUser.email);
         const driverDocSnap = await getDoc(driverDocRef);
 
         if (!driverDocSnap.exists()) {
@@ -87,7 +88,7 @@ export function DriverWallet() {
 
   const formatDate = (timestamp: any) => {
     if (!timestamp) return 'Fecha no disponible';
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    const date = timestamp.toDate ? timestamp.toDate() : toDate(timestamp);
     return date.toLocaleDateString('es-MX', {
       year: 'numeric',
       month: 'long',
