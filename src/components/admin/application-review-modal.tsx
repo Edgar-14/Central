@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,15 +21,21 @@ interface ApplicationReviewModalProps {
 
 // Helper function to convert image URL to data URI
 async function toDataURL(url: string): Promise<string> {
-  const response = await fetch(url);
-  const blob = await response.blob();
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
+    // This proxy might be needed in development to avoid CORS issues.
+    // In production, configure CORS on your Cloud Storage bucket.
+    const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`);
+    if (!response.ok) {
+        throw new Error(`Failed to fetch image ${url}: ${response.statusText}`);
+    }
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
 }
+
 
 export function ApplicationReviewModal({ driver, isOpen, onClose }: ApplicationReviewModalProps) {
   const [summary, setSummary] = useState<string | null>(null);
@@ -40,8 +48,14 @@ export function ApplicationReviewModal({ driver, isOpen, onClose }: ApplicationR
     setIsLoadingSummary(true);
     setSummary(null);
     setError(null);
+    
+    if (!driver.documents || Object.values(driver.documents).some(url => !url)) {
+         setError('Faltan uno o más documentos. No se puede generar el resumen.');
+         setIsLoadingSummary(false);
+         return;
+    }
+
     try {
-      // Convert all document URLs to data URIs in parallel
       const [
         ineDataUri,
         licenseDataUri,
@@ -70,10 +84,11 @@ export function ApplicationReviewModal({ driver, isOpen, onClose }: ApplicationR
       setSummary(result.summary);
     } catch (error) {
       console.error('Failed to summarize documents:', error);
-      setError('No se pudo generar el resumen de los documentos. Es posible que una de las imágenes no sea accesible o el servicio de IA no esté disponible.');
+      const errorMessage = 'No se pudo generar el resumen. Es posible que una de las imágenes no sea accesible, el servicio de IA no esté disponible o haya un problema de CORS. Intenta abrir las imágenes manualmente para verificar.';
+      setError(errorMessage);
       toast({
         title: 'Error de IA',
-        description: 'No se pudo generar el resumen de los documentos.',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
@@ -83,16 +98,31 @@ export function ApplicationReviewModal({ driver, isOpen, onClose }: ApplicationR
 
   const handleAction = async (action: 'approve' | 'reject') => {
     setIsProcessing(true);
-    // TODO: Implement Cloud Function call (activateDriver or rejectApplication)
-    console.log(`Action: ${action} for driver ${driver.uid}`);
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    const newStatus = action === 'approve' ? 'active' : 'rejected';
+    const driverDocRef = doc(db, 'drivers', driver.uid);
 
-    toast({
-      title: `Solicitud ${action === 'approve' ? 'Aprobada' : 'Rechazada'}`,
-      description: `El repartidor ${driver.personalInfo.fullName} ha sido ${action === 'approve' ? 'activado' : 'rechazado'}.`,
-    });
-    setIsProcessing(false);
-    onClose();
+    try {
+      // In a production app, this logic should be in a secure Cloud Function
+      // and would also handle setting custom claims and calling Shipday API.
+      await updateDoc(driverDocRef, {
+        operationalStatus: newStatus
+      });
+
+      toast({
+        title: `Solicitud ${action === 'approve' ? 'Aprobada' : 'Rechazada'}`,
+        description: `El repartidor ${driver.personalInfo.fullName} ha sido ${action === 'approve' ? 'activado' : 'rechazado'}.`,
+      });
+      onClose();
+    } catch (err) {
+      console.error(`Failed to ${action} application:`, err);
+      toast({
+        title: 'Error',
+        description: `No se pudo ${action === 'approve' ? 'aprobar' : 'rechazar'} la solicitud.`,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const documentLinks = [
@@ -137,7 +167,7 @@ export function ApplicationReviewModal({ driver, isOpen, onClose }: ApplicationR
                 <CardContent className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {documentLinks.map(doc => (
                         <a key={doc.label} href={doc.url} target="_blank" rel="noopener noreferrer">
-                            <Button variant="outline" size="sm" className="w-full">
+                            <Button variant="outline" size="sm" className="w-full" disabled={!doc.url}>
                                 {doc.label}
                                 <ExternalLink className="ml-2 h-3 w-3" />
                             </Button>
@@ -174,9 +204,11 @@ export function ApplicationReviewModal({ driver, isOpen, onClose }: ApplicationR
         </div>
         <DialogFooter className="mt-auto pt-4 border-t">
           <Button variant="destructive" onClick={() => handleAction('reject')} disabled={isProcessing}>
+            {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             <X className="mr-2 h-4 w-4" /> Rechazar
           </Button>
           <Button onClick={() => handleAction('approve')} disabled={isProcessing}>
+            {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             <Check className="mr-2 h-4 w-4" /> Aprobar
           </Button>
         </DialogFooter>
