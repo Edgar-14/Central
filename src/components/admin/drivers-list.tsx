@@ -30,7 +30,7 @@ export function DriversList() {
       try {
         const driversQuery = query(
           collection(db, 'drivers'),
-          where('operationalStatus', 'in', ['active', 'restricted_debt', 'suspended'])
+          where('applicationStatus', '==', 'approved')
         );
         const querySnapshot = await getDocs(driversQuery);
         const activeDrivers = querySnapshot.docs.map(doc => doc.data() as Driver);

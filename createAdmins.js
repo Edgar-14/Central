@@ -1,3 +1,4 @@
+
 const admin = require('firebase-admin');
 
 // Initialize the app with a service account, granting admin privileges

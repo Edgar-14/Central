@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -89,8 +90,13 @@ const trainingModules: {
     { id: 'module5', title: 'Evidencia: Foto de tu Mochila Térmica', type: 'upload', duration: '2 min', fieldId: 'trainingEvidenceUrl' },
 ];
 
-
 const contractUrl = "https://firebasestorage.googleapis.com/v0/b/befast-central.appspot.com/o/legal%2FContrato-BeFast-Repartidor-Ejemplo.pdf?alt=media&token=e9e6a9a4-6b21-4d38-8e6e-21e3c83b8b05";
+const annexLinks = {
+    anexo1: "/#", // Placeholder
+    anexo2: "/#",
+    anexo3: "/#",
+    anexo4: "/#",
+}
 
 export function RegistrationForm() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -360,17 +366,33 @@ export function RegistrationForm() {
                   </div>
                 </CardHeader>
                 <CardContent className="p-2">
-                   <div className="w-full h-96 border rounded-md p-4 overflow-y-auto text-sm bg-white dark:bg-gray-800">
-                    <h4 className="font-bold text-center mb-4">CONTRATO INDIVIDUAL DE TRABAJO POR TIEMPO INDETERMINADO</h4>
-                    <p className="mb-2"><strong>Declaraciones:</strong></p>
-                    <p className="mb-2">I. "El Patrón" declara ser una sociedad mercantil debidamente constituida conforme a las leyes de los Estados Unidos Mexicanos.</p>
-                    <p className="mb-4">II. "El Trabajador" declara por su propio derecho ser una persona física de nacionalidad mexicana, con la capacidad legal para obligarse en los términos del presente contrato.</p>
-                    <p className="mb-2"><strong>Cláusulas:</strong></p>
-                    <p className="mb-2"><strong>PRIMERA.- Objeto.</strong> El presente contrato tiene por objeto establecer los términos y condiciones bajo los cuales "El Trabajador" prestará sus servicios personales subordinados a "El Patrón" en la posición de Repartidor...</p>
-                    <p>[... El resto del contenido del contrato se puede visualizar en el PDF descargable ...]</p>
+                   <div className="w-full h-64 border rounded-md p-4 overflow-y-auto text-xs bg-white dark:bg-gray-800 space-y-2">
+                    <h4 className="font-bold text-center mb-2">CONTRATO INDIVIDUAL DE TRABAJO BAJO EL ESQUEMA DE PLATAFORMA DIGITAL</h4>
+                    <p><strong>DECLARACIONES:</strong></p>
+                    <p><strong>I.- "El Patrón":</strong> a) Que es una sociedad legalmente constituida... b) RFC [RFC DEL PATRÓN]... c) Domicilio en Boulevard Camino Real 1095 Interior 1, Colima...</p>
+                    <p><strong>II.- "El Trabajador":</strong> a) Ser de nacionalidad mexicana, mayor de edad... b) Que su domicilio es correcto... c) Que cuenta con la capacidad y medios propios (vehículo, teléfono)... d) Que posee licencias y seguros vigentes...</p>
+                    <p><strong>CLÁUSULAS:</strong></p>
+                    <p><strong>PRIMERA.- OBJETO.</strong> Prestar servicios personales subordinados de repartidor mediante la plataforma BEFAST...</p>
+                    <p><strong>SEGUNDA.- DURACIÓN.</strong> Contrato por tiempo indeterminado...</p>
+                    <p><strong>TERCERA.- PERIODO DE PRUEBA.</strong> 30 días...</p>
+                    <p><strong>QUINTA.- JORNADA.</strong> Fluctuante, con libertad de conexión...</p>
+                    <p><strong>SÉPTIMA.- BILLETERA DIGITAL.</strong> Todas las transacciones se gestionan aquí. Se autoriza el débito de comisión ($15.00 MXN) en pedidos de efectivo...</p>
+                    <p className="text-center font-bold mt-2">[El contenido completo se puede revisar en el PDF descargable]</p>
                   </div>
                 </CardContent>
               </Card>
+               <Card>
+                <CardHeader>
+                    <CardTitle className="text-base">Anexos del Contrato</CardTitle>
+                    <CardDescription className="text-sm">Estos documentos forman parte integral de tu contrato.</CardDescription>
+                </CardHeader>
+                <CardContent className="grid grid-cols-2 gap-2">
+                    <a href={annexLinks.anexo1} target="_blank" rel="noopener noreferrer"><Button variant="secondary" className="w-full"><Download className="mr-2 h-4 w-4" />Anexo 1: Política Financiera</Button></a>
+                    <a href={annexLinks.anexo2} target="_blank" rel="noopener noreferrer"><Button variant="secondary" className="w-full"><Download className="mr-2 h-4 w-4" />Anexo 2: Protocolo de Revisión</Button></a>
+                    <a href={annexLinks.anexo3} target="_blank" rel="noopener noreferrer"><Button variant="secondary" className="w-full"><Download className="mr-2 h-4 w-4" />Anexo 3: Beneficiarios</Button></a>
+                    <a href={annexLinks.anexo4} target="_blank" rel="noopener noreferrer"><Button variant="secondary" className="w-full"><Download className="mr-2 h-4 w-4" />Anexo 4: Protocolo de Accidentes</Button></a>
+                </CardContent>
+               </Card>
               <FormField name="acceptContract" render={({ field }) => (
                 <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                   <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
