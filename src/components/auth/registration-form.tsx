@@ -14,9 +14,12 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Loader2, UploadCloud, FileText, Video, Award, Send } from 'lucide-react';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { auth, db, storage } from '@/lib/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { auth, storage } from '@/lib/firebase';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+
+const functions = getFunctions();
+const submitApplication = httpsCallable(functions, 'submitapplication');
 
 const steps = [
   { id: 1, name: 'Cuenta y Datos Personales', icon: FileText },
@@ -129,7 +132,7 @@ export function RegistrationForm() {
     if(currentStep !== 5) return; // Only submit on the last step
     setIsLoading(true);
     try {
-      // 1. Create user in Firebase Auth
+      // 1. Create user in Firebase Auth (triggers onUserCreate)
       const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
       const user = userCredential.user;
 
@@ -138,7 +141,7 @@ export function RegistrationForm() {
       
       // 3. Upload documents to Cloud Storage
       const documentUrls: { [key: string]: string } = {};
-      for (const doc of documents) {
+       for (const doc of documents) {
           const file = data[doc.id];
           if (file instanceof File) {
             const path = `drivers/${user.uid}/${doc.id}_${file.name}`;
@@ -146,10 +149,8 @@ export function RegistrationForm() {
           }
       }
 
-      // 4. Create initial driver document in Firestore
-      const driverDocRef = doc(db, 'drivers', user.uid);
-      await setDoc(driverDocRef, {
-        uid: user.uid,
+      // 4. Call the submitApplication cloud function
+      await submitApplication({
         personalInfo: {
           fullName: data.fullName,
           email: data.email,
@@ -159,17 +160,12 @@ export function RegistrationForm() {
           rfc: data.rfc,
           nss: data.nss,
         },
-        vehicleInfo: { type: "Motocicleta", brand: "", plate: "" }, // Placeholder
-        legal: {
-            contractVersion: "v1.2",
-            signatureTimestamp: Date.now(),
-            ipAddress: "NA" // Should capture user IP in a real app
-        },
         documents: documentUrls,
-        wallet: { currentBalance: 0, debtLimit: -500 },
-        proStatus: { level: "Bronce", points: 0 },
-        operationalStatus: 'pending_validation',
-        shipdayId: null,
+        legal: {
+          contractVersion: "v1.2",
+          signatureTimestamp: Date.now(),
+          ipAddress: "NA" // Should capture user IP in a real app
+        },
       });
 
       toast({

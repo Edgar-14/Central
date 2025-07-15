@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,6 +17,10 @@ interface ApplicationReviewModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+const functions = getFunctions();
+const activateDriver = httpsCallable(functions, 'activatedriver');
+const rejectApplication = httpsCallable(functions, 'rejectapplication');
 
 // Helper function to convert image URL to data URI
 async function toDataURL(url: string): Promise<string> {
@@ -98,22 +101,20 @@ export function ApplicationReviewModal({ driver, isOpen, onClose }: ApplicationR
 
   const handleAction = async (action: 'approve' | 'reject') => {
     setIsProcessing(true);
-    const newStatus = action === 'approve' ? 'active' : 'rejected';
-    const driverDocRef = doc(db, 'drivers', driver.uid);
-
+    
     try {
-      // In a production app, this logic should be in a secure Cloud Function
-      // and would also handle setting custom claims and calling Shipday API.
-      await updateDoc(driverDocRef, {
-        operationalStatus: newStatus
-      });
+        if (action === 'approve') {
+            await activateDriver({ driverId: driver.uid });
+        } else {
+            await rejectApplication({ driverId: driver.uid });
+        }
 
       toast({
         title: `Solicitud ${action === 'approve' ? 'Aprobada' : 'Rechazada'}`,
         description: `El repartidor ${driver.personalInfo.fullName} ha sido ${action === 'approve' ? 'activado' : 'rechazado'}.`,
       });
       onClose();
-    } catch (err) {
+    } catch (err: any) {
       console.error(`Failed to ${action} application:`, err);
       toast({
         title: 'Error',
