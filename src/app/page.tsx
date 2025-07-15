@@ -74,11 +74,13 @@ export default function Home() {
       <main className="flex-1">
         <section className="relative w-full overflow-hidden">
           <div className="absolute inset-0 z-0">
-             <Image
+            <Image
               src="https://i.ibb.co/pPMrxYw/226-A1559.jpg"
               alt="BeFast delivery driver"
-              layout="fill"
-              objectFit="cover"
+              fill
+              priority
+              sizes="100vw"
+              style={{ objectFit: 'cover' }}
               className="opacity-20"
               data-ai-hint="delivery person"
             />
@@ -136,8 +138,9 @@ export default function Home() {
                               <Image 
                                   src={image.src}
                                   alt={image.alt}
-                                  layout="fill"
-                                  objectFit="cover"
+                                  fill
+                                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                  style={{ objectFit: 'cover' }}
                                   className="transition-transform duration-500 hover:scale-110"
                                   data-ai-hint={image.hint}
                               />
@@ -153,13 +156,13 @@ export default function Home() {
                          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Requisitos para Unirte</h2>
                          <p className="mt-4 text-muted-foreground">Asegúrate de tener todo lo necesario para empezar a generar ganancias con nosotros.</p>
                          <ul className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                          {requirements.map((req) => (
+                           {requirements.map((req) => (
                             <li key={req} className="flex items-start">
                               <CheckCircle className="h-6 w-6 text-primary mr-3 mt-1 shrink-0" />
                               <span>{req}</span>
                             </li>
-                          ))}
-                        </ul>
+                           ))}
+                         </ul>
                     </div>
                 </div>
            </div>
