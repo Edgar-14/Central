@@ -8,42 +8,25 @@ service cloud.firestore {
       return request.auth.token.role == 'admin' || request.auth.token.role == 'superadmin';
     }
 
-    // Helper function to check if the user is the owner of the document
-    function isOwner(userId) {
-      return request.auth.uid == userId;
-    }
-    
-    // Rules for the 'drivers' collection
+    // Drivers can read their own document and transactions
+    // Admins can read/write any driver document
     match /drivers/{driverEmail} {
-      // Admins can do anything
-      allow read, write: if isAdmin();
+      allow read: if request.auth.uid == resource.data.uid || isAdmin();
+      allow write: if isAdmin();
       
-      // A user can create their own document during registration
-      allow create: if isOwner(request.resource.data.uid);
-
-      // An authenticated user can read their own document
-      allow get: if request.auth.token.email == driverEmail;
-      
-      // A user can update their own document only during application submission
-      allow update: if request.auth.token.email == driverEmail && request.resource.data.applicationStatus == 'pending_review';
-
-      // Rules for the 'transactions' subcollection
+      // Drivers can read their own transactions
+      // Admins can write new transactions (e.g., payouts)
       match /transactions/{transactionId} {
-        // Admins can read any transaction
-        allow read: if isAdmin();
-        // A user can read their own transactions
-        allow get: if get(/databases/$(database)/documents/drivers/$(driverEmail)).data.uid == request.auth.uid;
-        // Nobody can write directly to transactions, it's handled by backend functions
-        allow write: if false;
+        allow read: if request.auth.uid == get(/databases/$(database)/documents/drivers/$(driverEmail)).data.uid || isAdmin();
+        allow write: if isAdmin();
       }
     }
 
-    // Rules for operational settings
-    match /operationalSettings/global {
-      // Admins can read and write settings
-      allow read, write: if isAdmin();
-      // Drivers can read the settings to see active incentives
-      allow get: if request.auth.token.role == 'driver';
+    // Admins can read and write operational settings
+    // Drivers can only read them
+    match /operationalSettings/{docId} {
+      allow read: if request.auth != null; // Any authenticated user can read settings
+      allow write: if isAdmin();
     }
   }
 }

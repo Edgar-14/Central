@@ -15,14 +15,14 @@ import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Loader2, UploadCloud, FileText, Video, Award, Send, CheckCircle, Download, ExternalLink, Upload } from 'lucide-react';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { auth, storage } from '@/lib/firebase';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from '@/lib/firebase';
 import { cn } from '@/lib/utils';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 
 const functions = getFunctions();
+const registerNewUser = httpsCallable(functions, 'registerNewUser');
 const submitApplication = httpsCallable(functions, 'submitapplication');
 
 const steps = [
@@ -103,6 +103,7 @@ export function RegistrationForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [completedModules, setCompletedModules] = useState<Set<string>>(new Set());
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
+  const [uid, setUid] = useState<string | null>(null); // Store UID after step 1
   const { toast } = useToast();
   const router = useRouter();
 
@@ -131,7 +132,7 @@ export function RegistrationForm() {
         }
         return completedModules.has(module.id);
     });
-  }, [completedModules, methods.watch()]);
+  }, [completedModules, methods]);
 
   const progress = (currentStep / steps.length) * 100;
 
@@ -141,7 +142,7 @@ export function RegistrationForm() {
       fieldsToValidate = ['email', 'password', 'confirmPassword', 'fullName', 'phone', 'curp', 'rfc', 'nss', 'address'];
     }
      if (currentStep === 2) {
-      // Step 2 is now optional
+      // Step 2 document upload is optional for now
     }
     if (currentStep === 3) {
       fieldsToValidate = ['acceptContract', 'acceptSignature', 'signatureName'];
@@ -150,14 +151,39 @@ export function RegistrationForm() {
     const isValid = fieldsToValidate.length > 0 ? await methods.trigger(fieldsToValidate) : true;
     
     if (isValid) {
-       if (currentStep === 4 && !allModulesCompleted) {
-            toast({
-                title: "Capacitación Incompleta",
-                description: "Por favor, completa todas las tareas de capacitación para continuar.",
-                variant: "destructive"
-            });
-            return;
-       }
+      // Special handling for step 1: create user and Firestore doc
+      if (currentStep === 1) {
+        setIsLoading(true);
+        try {
+          const { email, password, fullName, phone } = methods.getValues();
+          const result = await registerNewUser({ email, password, fullName, phone }) as { data: { uid: string } };
+          setUid(result.data.uid); // Save UID for later steps
+          toast({
+            title: 'Cuenta Creada',
+            description: 'Ahora continúa con los siguientes pasos.',
+          });
+          setCurrentStep(currentStep + 1);
+        } catch (error: any) {
+          console.error('Registration step 1 error:', error);
+          toast({
+            variant: 'destructive',
+            title: 'Error al crear la cuenta',
+            description: error.message || 'Ocurrió un error. Por favor, inténtalo de nuevo.',
+          });
+        } finally {
+          setIsLoading(false);
+        }
+        return; // Stop here and wait for user to proceed
+      }
+
+      if (currentStep === 4 && !allModulesCompleted) {
+        toast({
+          title: "Capacitación Incompleta",
+          description: "Por favor, completa todas las tareas de capacitación para continuar.",
+          variant: "destructive"
+        });
+        return;
+      }
       if (currentStep < steps.length) {
         setCurrentStep(currentStep + 1);
       }
@@ -190,18 +216,11 @@ export function RegistrationForm() {
   };
 
   const onSubmit = async (data: FormData) => {
-    if(currentStep !== 5) return; // Only submit on the last step
+    if(currentStep !== 5 || !uid) return; // Only submit on the last step and if UID is set
     setIsLoading(true);
     try {
-      // 1. Create user in Firebase Auth
-      const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
-      const user = userCredential.user;
-      const uid = user.uid;
-
-      // 2. Update user profile
-      await updateProfile(user, { displayName: data.fullName });
       
-      // 3. Upload documents to Cloud Storage
+      // Upload documents to Cloud Storage
       const documentUrls: { [key: string]: string } = {};
       const allDocsToUpload = [...documents, { name: 'Evidencia de Capacitación', id: 'trainingEvidenceUrl' }];
       for (const doc of allDocsToUpload) {
@@ -215,8 +234,9 @@ export function RegistrationForm() {
           }
       }
 
-      // 4. Call the submitApplication cloud function
+      // Call the submitApplication cloud function
       await submitApplication({
+        email: data.email, // Pass email to identify the document
         personalInfo: {
           fullName: data.fullName,
           email: data.email,
@@ -242,13 +262,11 @@ export function RegistrationForm() {
       router.push('/login');
 
     } catch (error: any) {
-      console.error('Registration error:', error);
+      console.error('Final submission error:', error);
       toast({
         variant: 'destructive',
-        title: 'Error en el registro',
-        description: error.code === 'auth/email-already-in-use' 
-          ? 'Este correo electrónico ya está en uso.' 
-          : 'Ocurrió un error. Por favor, inténtalo de nuevo.',
+        title: 'Error al enviar la solicitud',
+        description: error.message || 'Ocurrió un error. Por favor, inténtalo de nuevo.',
       });
     } finally {
       setIsLoading(false);
@@ -495,7 +513,8 @@ export function RegistrationForm() {
             )}
             <div className="flex-grow"></div>
             {currentStep < 5 ? (
-              <Button type="button" onClick={handleNext}>
+              <Button type="button" onClick={handleNext} disabled={isLoading}>
+                 {isLoading && currentStep === 1 ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 Siguiente
               </Button>
             ) : null}

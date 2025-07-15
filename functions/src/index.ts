@@ -5,9 +5,8 @@ import {getAuth} from "firebase-admin/auth";
 import {getFirestore, FieldValue} from "firebase-admin/firestore";
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {onRequest} from "firebase-functions/v2/https";
-import {beforeUserCreated} from "firebase-functions/v2/identity";
 import {defineString} from "firebase-functions/params";
-import shipday from '.api/apis/shipday';
+import shipday from '../.api/apis/shipday';
 
 initializeApp();
 
@@ -18,42 +17,61 @@ const SHIPDAY_WEBHOOK_SECRET = defineString("SHIPDAY_WEBHOOK_SECRET");
 // Authenticate with Shipday SDK
 shipday.auth(SHIPDAY_API_KEY.value());
 
-// 1. Triggered before a new user is created in Firebase Auth
-export const setupnewuser = beforeUserCreated(async (event) => {
-  const user = event.data;
-  const docId = user.email?.toLowerCase();
-  if (!docId) {
-    throw new HttpsError("invalid-argument", "El correo electrónico es requerido para crear un repartidor.");
-  }
-  const driverDocRef = getFirestore().collection("drivers").doc(docId);
-  await driverDocRef.set({
-    uid: user.uid,
-    email: docId,
-    fullName: user.displayName || "",
-    phone: user.phoneNumber || "",
-    applicationStatus: "step1_account_created",
-    operationalStatus: "uninitialized",
-    createdAt: FieldValue.serverTimestamp(),
-    personalInfo: {},
-    vehicleInfo: {},
-    legal: {},
-    documents: {},
-    wallet: { currentBalance: 0, debtLimit: -500 },
-    proStatus: { level: "Bronce", points: 0 },
-    shipdayId: null,
-  });
+
+export const registerNewUser = onCall<{email: string, password: string, fullName: string, phone: string}>(async (request) => {
+    const { email, password, fullName, phone } = request.data;
+    const lowerCaseEmail = email.toLowerCase();
+    
+    try {
+        const userRecord = await getAuth().createUser({
+            email: lowerCaseEmail,
+            password: password,
+            displayName: fullName,
+            phoneNumber: phone
+        });
+
+        const driverDocRef = getFirestore().collection("drivers").doc(lowerCaseEmail);
+        await driverDocRef.set({
+            uid: userRecord.uid,
+            email: lowerCaseEmail,
+            fullName: fullName,
+            phone: phone,
+            applicationStatus: "step1_account_created",
+            operationalStatus: "uninitialized",
+            createdAt: FieldValue.serverTimestamp(),
+            personalInfo: {},
+            vehicleInfo: {},
+            legal: {},
+            documents: {},
+            wallet: { currentBalance: 0, debtLimit: -500 },
+            proStatus: { level: "Bronce", points: 0 },
+            shipdayId: null,
+        });
+
+        return { success: true, uid: userRecord.uid };
+
+    } catch (error: any) {
+        if (error.code === 'auth/email-already-exists') {
+            throw new HttpsError('already-exists', 'Este correo electrónico ya está en uso.');
+        }
+        console.error("Error creating new user:", error);
+        throw new HttpsError('internal', 'No se pudo completar el registro.');
+    }
 });
 
+
 interface SubmitApplicationData {
+    email: string;
     personalInfo: Record<string, unknown>;
     documents: Record<string, string>;
     legal: Record<string, unknown>;
 }
 
-// 2. Called from frontend when a driver submits their application
+// Called from frontend when a driver submits their application
 export const submitapplication = onCall<SubmitApplicationData>((request) => {
     if (!request.auth) throw new HttpsError("unauthenticated", "La función debe ser llamada por un usuario autenticado.");
-    const docId = request.auth.token.email?.toLowerCase();
+    
+    const docId = request.data.email?.toLowerCase();
     if (!docId) throw new HttpsError("invalid-argument", "El correo electrónico del usuario no está disponible.");
 
     const { personalInfo, documents, legal } = request.data;
@@ -86,18 +104,15 @@ export const approveapplication = onCall<{email: string}>(async (request) => {
     if (!driverData) throw new HttpsError("internal", "No se pudieron leer los datos del repartidor.");
 
     // Step 1: Create driver in Shipday
-    const shipdayResponse = await fetch("https://api.shipday.com/v1/drivers", {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-API-KEY': SHIPDAY_API_KEY.value() },
-        body: JSON.stringify({ name: driverData.fullName, email: driverData.email, phoneNumber: driverData.phone })
-    });
+    const { data: shipdayResult } = await shipday.insertDeliveryOrder({
+        name: driverData.fullName, 
+        email: driverData.email, 
+        phoneNumber: driverData.phone 
+    } as any);
 
-    if (!shipdayResponse.ok) {
-        const errorText = await shipdayResponse.text();
-        console.error("Error al crear repartidor en Shipday:", errorText);
-        throw new HttpsError("internal", `Error al crear el repartidor en Shipday: ${errorText}`);
+    if (!shipdayResult || !(shipdayResult as any).id) {
+         throw new HttpsError("internal", `Error al crear el repartidor en Shipday.`);
     }
-    const shipdayResult = await shipdayResponse.json() as {id: number};
     
     // Step 2: Grant 'driver' role in Firebase Auth
     await getAuth().setCustomUserClaims(driverData.uid, { role: "driver" });
@@ -106,7 +121,7 @@ export const approveapplication = onCall<{email: string}>(async (request) => {
     await driverDocRef.update({
         applicationStatus: "approved",
         operationalStatus: "active",
-        shipdayId: shipdayResult.id,
+        shipdayId: (shipdayResult as any).id,
         approvedAt: FieldValue.serverTimestamp(),
         "wallet.debtLimit": -500,
     });
@@ -211,7 +226,8 @@ export const updateDriverWallet = onRequest(async (req, res) => {
             const driverDoc = await transaction.get(driverDocRef);
             if (!driverDoc.exists) throw new Error(`Driver not found.`);
             
-            const wallet = driverDoc.data()?.wallet || { currentBalance: 0 };
+            const driverData = driverDoc.data();
+            const wallet = driverData?.wallet || { currentBalance: 0 };
             const deliveryFee = order.costing?.deliveryFee || 0;
             const tip = order.costing?.tip || 0;
             let totalCredit = 0;
@@ -220,18 +236,24 @@ export const updateDriverWallet = onRequest(async (req, res) => {
             if (order.paymentMethod === 'CASH') {
                 totalCredit = -baseCommission;
                 transactionDescription.push(`Comisión (efectivo) #${orderId}`);
-            } else {
+            } else { // Card payment
+                // On card payments, first compensate debt
+                const debt = wallet.currentBalance < 0 ? Math.abs(wallet.currentBalance) : 0;
+                if (debt > 0) {
+                    const paymentToDebt = Math.min(debt, deliveryFee);
+                    transactionDescription.push(`Abono a deuda: -$${paymentToDebt.toFixed(2)}`);
+                }
                 totalCredit = deliveryFee;
                 transactionDescription.push(`Ganancia entrega #${orderId}`);
             }
 
             if (tip > 0) {
                  totalCredit += tip;
-                 transactionDescription.push(`Propina: $${tip.toFixed(2)}`);
+                 transactionDescription.push(`Propina: +$${tip.toFixed(2)}`);
             }
             if (rainFee > 0) {
                 totalCredit += rainFee;
-                transactionDescription.push(`Tarifa lluvia: $${rainFee.toFixed(2)}`);
+                transactionDescription.push(`Tarifa lluvia: +$${rainFee.toFixed(2)}`);
             }
              
             transaction.update(driverDocRef, { "wallet.currentBalance": FieldValue.increment(totalCredit) });
