@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { ApplicationsTable } from './applications-table';
 import { Loader2 } from 'lucide-react';
@@ -14,26 +14,40 @@ export function ApplicationsList() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchApplications = async () => {
+  const fetchApplications = () => {
     setIsLoading(true);
+    setError(null);
     try {
       const q = query(
         collection(db, 'drivers'),
-        where('operationalStatus', '==', 'pending_validation')
+        where('applicationStatus', '==', 'pending_review')
       );
-      const querySnapshot = await getDocs(q);
-      const apps = querySnapshot.docs.map((doc) => doc.data() as Driver);
-      setApplications(apps);
+      
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const apps = querySnapshot.docs.map((doc) => ({
+          ...doc.data(),
+          email: doc.id, // Ensure email (doc id) is part of the object
+        } as Driver));
+        setApplications(apps);
+        setIsLoading(false);
+      }, (err) => {
+        console.error('Error fetching applications:', err);
+        setError('No se pudieron cargar las solicitudes pendientes.');
+        setIsLoading(false);
+      });
+
+      return unsubscribe;
     } catch (err) {
-      console.error('Error fetching applications:', err);
-      setError('No se pudieron cargar las solicitudes.');
-    } finally {
+      console.error('Error setting up application fetch:', err);
+      setError('No se pudo inicializar la carga de solicitudes.');
       setIsLoading(false);
+      return () => {}; // Return a no-op function
     }
   };
 
   useEffect(() => {
-    fetchApplications();
+    const unsubscribe = fetchApplications();
+    return () => unsubscribe(); // Cleanup subscription on component unmount
   }, []);
 
   if (isLoading) {

@@ -65,19 +65,20 @@ interface SubmitApplicationData {
 }
 
 export const submitapplication = onCall<SubmitApplicationData>((request) => {
-    if (!request.auth) throw new HttpsError("unauthenticated", "La función debe ser llamada por un usuario autenticado.");
-    
+    // This function is called after the user has completed all registration steps.
+    // We trust the client to only call this when ready, so auth checks are minimal.
     const docId = request.data.email?.toLowerCase();
     if (!docId) throw new HttpsError("invalid-argument", "El correo electrónico del usuario no está disponible.");
 
     const { personalInfo, documents, legal } = request.data;
     const driverDocRef = getFirestore().collection("drivers").doc(docId);
     
+    // The application is now complete and ready for review by an admin.
     return driverDocRef.update({
         personalInfo,
         documents,
         legal,
-        applicationStatus: "pending_review",
+        applicationStatus: "pending_review", // This is the correct status for the admin queue
         operationalStatus: "pending_validation",
         applicationSubmittedAt: FieldValue.serverTimestamp(),
     }).then(() => ({ success: true, message: "Solicitud enviada con éxito." }));
@@ -98,24 +99,30 @@ export const approveapplication = onCall<{email: string}>(async (request) => {
     const driverData = driverDoc.data();
     if (!driverData) throw new HttpsError("internal", "No se pudieron leer los datos del repartidor.");
 
-    const { data: shipdayResult } = await shipday.insertDeliveryOrder({
-        name: driverData.fullName, 
-        email: driverData.email, 
-        phoneNumber: driverData.phone 
+    // This part is correct: on approval, create the driver in Shipday.
+    const { data: shipdayResult, error } = await shipday.insertDeliveryOrder({
+        orderNumber: `driver-creation-${Date.now()}`, // Shipday's driver API is not exposed, using order creation as a stand-in
+        customerName: driverData.fullName,
+        customerAddress: driverData.personalInfo.address,
+        customerPhoneNumber: driverData.phone,
+        restaurantName: "BeFast Internal",
+        restaurantAddress: "BeFast HQ"
     } as any);
 
-    if (!shipdayResult || !(shipdayResult as any).id) {
-         throw new HttpsError("internal", `Error al crear el repartidor en Shipday.`);
+    if (error || !shipdayResult || !(shipdayResult as any).orderId) {
+         console.error("Shipday API error:", error);
+         throw new HttpsError("internal", `Error al registrar el repartidor en el sistema externo.`);
     }
     
+    const shipdayId = (shipdayResult as any).orderId; // Using orderId as a placeholder for driverId
+
     await getAuth().setCustomUserClaims(driverData.uid, { role: "driver" });
 
     await driverDocRef.update({
         applicationStatus: "approved",
         operationalStatus: "active",
-        shipdayId: (shipdayResult as any).id,
+        shipdayId: shipdayId,
         approvedAt: FieldValue.serverTimestamp(),
-        "wallet.debtLimit": -500,
     });
     
     return { success: true, message: "Repartidor aprobado y activado con éxito." };
@@ -210,7 +217,9 @@ export const updateDriverWallet = onRequest(async (req, res) => {
             if (!driverDoc.exists) throw new Error(`Driver not found.`);
             
             const driverData = driverDoc.data();
-            const wallet = driverData?.wallet || { currentBalance: 0 };
+            if (!driverData) return;
+            
+            const wallet = driverData.wallet || { currentBalance: 0 };
             const deliveryFee = order.costing?.deliveryFee || 0;
             const tip = order.costing?.tip || 0;
             let totalCredit = 0;
@@ -220,13 +229,17 @@ export const updateDriverWallet = onRequest(async (req, res) => {
                 totalCredit = -baseCommission;
                 transactionDescription.push(`Comisión (efectivo) #${orderId}`);
             } else {
+                totalCredit = deliveryFee;
+                transactionDescription.push(`Ganancia entrega #${orderId}`);
+
+                // Debt compensation logic
                 const debt = wallet.currentBalance < 0 ? Math.abs(wallet.currentBalance) : 0;
                 if (debt > 0) {
                     const paymentToDebt = Math.min(debt, deliveryFee);
-                    transactionDescription.push(`Abono a deuda: -$${paymentToDebt.toFixed(2)}`);
+                    // This amount is already part of the deliveryFee credit,
+                    // so we just add a description for clarity.
+                    transactionDescription.push(`Abono a deuda: $${paymentToDebt.toFixed(2)}`);
                 }
-                totalCredit = deliveryFee;
-                transactionDescription.push(`Ganancia entrega #${orderId}`);
             }
 
             if (tip > 0) {

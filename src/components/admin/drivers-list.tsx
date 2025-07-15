@@ -29,7 +29,7 @@ export function DriversList() {
   const [payoutDriver, setPayoutDriver] = useState<Driver | null>(null);
   const { toast } = useToast();
 
-  const fetchActiveDrivers = async () => {
+  const fetchActiveDrivers = () => {
       setIsLoading(true);
       setError(null);
       try {
@@ -39,7 +39,7 @@ export function DriversList() {
         );
         
         const unsubscribe = onSnapshot(driversQuery, (querySnapshot) => {
-          const activeDrivers = querySnapshot.docs.map(doc => doc.data() as Driver);
+          const activeDrivers = querySnapshot.docs.map(doc => ({ ...doc.data(), email: doc.id } as Driver));
           setDrivers(activeDrivers);
           setIsLoading(false);
         }, (err) => {
@@ -48,19 +48,20 @@ export function DriversList() {
            setIsLoading(false);
         });
 
-        return () => unsubscribe();
+        return unsubscribe;
 
       } catch (err) {
         console.error("Error setting up driver fetch:", err);
         setError('No se pudo inicializar la carga de repartidores.');
         setIsLoading(false);
+        return () => {};
       }
     };
 
   useEffect(() => {
-    const unsubPromise = fetchActiveDrivers();
+    const unsubscribe = fetchActiveDrivers();
     return () => {
-        unsubPromise.then(unsub => unsub && unsub());
+        unsubscribe();
     };
   }, []);
   
@@ -89,7 +90,7 @@ export function DriversList() {
   }
 
   const refreshList = () => {
-      fetchActiveDrivers();
+      // onSnapshot handles refreshes automatically, but this can be kept for manual refresh buttons if needed
   }
 
   return (

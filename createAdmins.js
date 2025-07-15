@@ -52,7 +52,7 @@ const usersToCreate = [
       email: 'ejosgas@gmail.com',
       phone: '3121112233',
       shipdayId: 98765,
-      applicationStatus: 'approved_manual_sync',
+      applicationStatus: 'approved_manual_sync', // This status makes it appear in the active list
       operationalStatus: 'active',
       createdAt: new Date(),
       approvedAt: new Date(),
@@ -99,14 +99,15 @@ const usersToCreate = [
 
 const createOrUpdateUser = async (userData) => {
   const { email, password, role, displayName, firestoreData } = userData;
+  const lowerCaseEmail = email.toLowerCase();
 
   try {
     // Check if user exists
-    let userRecord = await auth.getUserByEmail(email).catch(() => null);
+    let userRecord = await auth.getUserByEmail(lowerCaseEmail).catch(() => null);
 
     if (userRecord) {
       // User exists, update them
-      console.log(`Usuario ${email} ya existe. Actualizando...`);
+      console.log(`Usuario ${lowerCaseEmail} ya existe. Actualizando...`);
       await auth.updateUser(userRecord.uid, {
         password: password,
         displayName: displayName,
@@ -114,9 +115,9 @@ const createOrUpdateUser = async (userData) => {
       userRecord = await auth.getUser(userRecord.uid); // Re-fetch to confirm update
     } else {
       // User does not exist, create them
-      console.log(`Creando nuevo usuario: ${email}...`);
+      console.log(`Creando nuevo usuario: ${lowerCaseEmail}...`);
       userRecord = await auth.createUser({
-        email: email,
+        email: lowerCaseEmail,
         password: password,
         displayName: displayName,
       });
@@ -124,19 +125,19 @@ const createOrUpdateUser = async (userData) => {
 
     // Set custom claims for role-based access control
     await auth.setCustomUserClaims(userRecord.uid, { role: role });
-    console.log(`Rol '${role}' asignado a ${email}.`);
+    console.log(`Rol '${role}' asignado a ${lowerCaseEmail}.`);
 
     // If it's a driver, create or update their Firestore document
     if (role === 'driver' && firestoreData) {
-        const docRef = db.collection('drivers').doc(email.toLowerCase());
+        const docRef = db.collection('drivers').doc(lowerCaseEmail);
         await docRef.set({ ...firestoreData, uid: userRecord.uid }, { merge: true });
-        console.log(`Documento de Firestore creado/actualizado para el repartidor ${email}.`);
+        console.log(`Documento de Firestore creado/actualizado para el repartidor ${lowerCaseEmail}.`);
     }
 
-    console.log(`--- Proceso completado para ${email} ---\n`);
+    console.log(`--- Proceso completado para ${lowerCaseEmail} ---\n`);
 
   } catch (error) {
-    console.error(`Error procesando al usuario ${email}:`, error.message);
+    console.error(`Error procesando al usuario ${lowerCaseEmail}:`, error.message);
   }
 };
 
