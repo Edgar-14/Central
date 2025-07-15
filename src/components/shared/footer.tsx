@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { Facebook, Instagram, Mail, Phone, Globe } from 'lucide-react';
 import { Logo } from './logo';
 
@@ -16,8 +17,8 @@ export function Footer() {
       { label: 'Soporte General', address: 'soporte@befastapp.com.mx' },
     ],
     websites: [
-        { label: 'BeFast Market', url: 'befastmarket.com' },
-        { label: 'BeFast Delivery', url: 'befastapp.com' },
+      { label: 'BeFast Market', url: 'https://befastmarket.com' },
+      { label: 'BeFast Delivery', url: 'https://befastapp.com' },
     ]
   };
 
@@ -32,10 +33,10 @@ export function Footer() {
             </p>
             <div className="mt-6 flex gap-4">
               {socialLinks.map(({ name, icon: Icon, href }) => (
-                <a key={name} href={href} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+                <Link key={name} href={href} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
                   <Icon className="h-6 w-6" />
                   <span className="sr-only">{name}</span>
-                </a>
+                </Link>
               ))}
             </div>
           </div>
@@ -72,10 +73,10 @@ export function Footer() {
               <ul className="mt-4 space-y-2 text-sm">
                 {contactInfo.websites.map(({ label, url }) => (
                   <li key={url}>
-                     <a href={`https://${url}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-muted-foreground hover:text-primary">
+                     <Link href={url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-muted-foreground hover:text-primary">
                       <Globe className="h-4 w-4 shrink-0" />
                       <span>{label}</span>
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>

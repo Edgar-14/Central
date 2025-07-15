@@ -1,10 +1,11 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle2, ArrowRight } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { CheckCircle, ArrowRight } from 'lucide-react';
 import { Footer } from '@/components/shared/footer';
 import { Logo } from '@/components/shared/logo';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import Image from 'next/image';
 
 export default function Home() {
   const benefits = [
@@ -25,11 +26,17 @@ export default function Home() {
     'Póliza de seguro vehicular con cobertura comercial',
   ];
 
+  const sliderImages = [
+    { src: "https://i.ibb.co/HLRmsn53/IMG-9924.jpg", alt: "Driver on motorcycle", hint: "motorcycle delivery" },
+    { src: "https://i.ibb.co/GQ09Wf7/226A1559.jpg", alt: "BeFast delivery driver", hint: "delivery person" },
+    { src: "https://i.ibb.co/RpQSDQZJ/226A1568.jpg", alt: "Restaurant interior", hint: "restaurant interior" },
+  ];
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-background/80 backdrop-blur-lg">
         <div className="container mx-auto flex h-20 items-center justify-between px-4 md:px-6">
-          <Logo textClassName="text-white" />
+          <Logo />
           <nav className="hidden items-center gap-6 md:flex">
             <Link href="#benefits" className="text-sm font-medium text-gray-300 transition-colors hover:text-white">Beneficios</Link>
             <Link href="#requirements" className="text-sm font-medium text-gray-300 transition-colors hover:text-white">Requisitos</Link>
@@ -84,7 +91,7 @@ export default function Home() {
               {benefits.map((benefit) => (
                 <Card key={benefit} className="glass-card text-center transition-all duration-300 hover:scale-105 hover:shadow-2xl">
                   <CardContent className="p-6">
-                    <CheckCircle2 className="mx-auto h-12 w-12 text-primary" />
+                    <CheckCircle className="mx-auto h-12 w-12 text-primary" />
                     <p className="mt-4 font-semibold">{benefit}</p>
                   </CardContent>
                 </Card>
@@ -96,24 +103,34 @@ export default function Home() {
         <section id="requirements" className="py-16 md:py-24">
            <div className="container mx-auto px-4 md:px-6">
                 <div className="grid lg:grid-cols-2 gap-12 items-center">
-                    <div className="relative h-96 lg:h-full w-full rounded-2xl overflow-hidden">
-                        <Image 
-                            src="https://i.ibb.co/HLRmsn53/IMG-9924.jpg" 
-                            alt="Driver on motorcycle" 
-                            layout="fill"
-                            objectFit="cover"
-                            className="transition-transform duration-500 hover:scale-110"
-                            data-ai-hint="motorcycle delivery"
-                        />
-                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-                    </div>
+                    <Carousel className="w-full h-96 lg:h-full rounded-2xl overflow-hidden group">
+                      <CarouselContent>
+                        {sliderImages.map((image, index) => (
+                          <CarouselItem key={index}>
+                            <div className="relative h-96 lg:h-full w-full">
+                              <Image 
+                                  src={image.src}
+                                  alt={image.alt}
+                                  layout="fill"
+                                  objectFit="cover"
+                                  className="transition-transform duration-500 hover:scale-110"
+                                  data-ai-hint={image.hint}
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                            </div>
+                          </CarouselItem>
+                        ))}
+                      </CarouselContent>
+                      <CarouselPrevious className="absolute left-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </Carousel>
                     <div>
                          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Requisitos para Unirte</h2>
                          <p className="mt-4 text-muted-foreground">Asegúrate de tener todo lo necesario para empezar a generar ganancias con nosotros.</p>
                          <ul className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
                           {requirements.map((req) => (
                             <li key={req} className="flex items-start">
-                              <CheckCircle2 className="h-6 w-6 text-primary mr-3 mt-1 shrink-0" />
+                              <CheckCircle className="h-6 w-6 text-primary mr-3 mt-1 shrink-0" />
                               <span>{req}</span>
                             </li>
                           ))}
