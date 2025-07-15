@@ -14,8 +14,9 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Loader2, UploadCloud, FileText, Video, Award, Send } from 'lucide-react';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { auth, db } from '@/lib/firebase';
+import { auth, db, storage } from '@/lib/firebase';
 import { doc, setDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const steps = [
   { id: 1, name: 'Cuenta y Datos Personales', icon: FileText },
@@ -24,6 +25,8 @@ const steps = [
   { id: 4, name: 'Capacitación', icon: Video },
   { id: 5, name: 'Envío Final', icon: Award },
 ];
+
+const fileSchema = z.any().refine(file => file instanceof File, 'Se requiere un archivo.');
 
 const formSchema = z.object({
   // Step 1
@@ -36,6 +39,13 @@ const formSchema = z.object({
   rfc: z.string().min(12, { message: 'El RFC debe tener al menos 12 caracteres.' }),
   nss: z.string().min(11, { message: 'El NSS debe tener 11 caracteres.' }),
   address: z.string().min(10, { message: 'Dirección requerida.' }),
+  // Step 2
+  ineUrl: fileSchema,
+  licenseUrl: fileSchema,
+  addressProofUrl: fileSchema,
+  taxIdUrl: fileSchema,
+  circulationCardUrl: fileSchema,
+  insuranceUrl: fileSchema,
   // Step 3
   acceptContract: z.boolean().refine((val) => val === true, { message: 'Debes aceptar el contrato.' }),
   acceptSignature: z.boolean().refine((val) => val === true, { message: 'Debes aceptar la validez de la firma.' }),
@@ -46,6 +56,16 @@ const formSchema = z.object({
 });
 
 type FormData = z.infer<typeof formSchema>;
+
+const documents = [
+  { name: 'INE/Pasaporte', id: 'ineUrl' as const },
+  { name: 'Licencia de Conducir', id: 'licenseUrl' as const },
+  { name: 'Comprobante de Domicilio', id: 'addressProofUrl' as const },
+  { name: 'Constancia de Situación Fiscal', id: 'taxIdUrl' as const },
+  { name: 'Tarjeta de Circulación', id: 'circulationCardUrl' as const },
+  { name: 'Póliza de Seguro Vehicular', id: 'insuranceUrl' as const },
+];
+
 
 export function RegistrationForm() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -79,7 +99,7 @@ export function RegistrationForm() {
       fieldsToValidate = ['email', 'password', 'confirmPassword', 'fullName', 'phone', 'curp', 'rfc', 'nss', 'address'];
     }
      if (currentStep === 2) {
-      // Logic for document upload validation will go here
+      fieldsToValidate = documents.map(d => d.id);
     }
     if (currentStep === 3) {
       fieldsToValidate = ['acceptContract', 'acceptSignature', 'signatureName'];
@@ -98,6 +118,12 @@ export function RegistrationForm() {
       setCurrentStep(currentStep - 1);
     }
   };
+  
+  const uploadFile = async (file: File, path: string): Promise<string> => {
+    const storageRef = ref(storage, path);
+    await uploadBytes(storageRef, file);
+    return getDownloadURL(storageRef);
+  };
 
   const onSubmit = async (data: FormData) => {
     if(currentStep !== 5) return; // Only submit on the last step
@@ -109,10 +135,18 @@ export function RegistrationForm() {
 
       // 2. Update user profile
       await updateProfile(user, { displayName: data.fullName });
+      
+      // 3. Upload documents to Cloud Storage
+      const documentUrls: { [key: string]: string } = {};
+      for (const doc of documents) {
+          const file = data[doc.id];
+          if (file instanceof File) {
+            const path = `drivers/${user.uid}/${doc.id}_${file.name}`;
+            documentUrls[doc.id] = await uploadFile(file, path);
+          }
+      }
 
-      // 3. Create initial driver document in Firestore
-      // This part would ideally be a Cloud Function (onUserCreate)
-      // but we simulate it here for now.
+      // 4. Create initial driver document in Firestore
       const driverDocRef = doc(db, 'drivers', user.uid);
       await setDoc(driverDocRef, {
         uid: user.uid,
@@ -125,21 +159,18 @@ export function RegistrationForm() {
           rfc: data.rfc,
           nss: data.nss,
         },
-        // This is a placeholder, will be updated in step 2
         vehicleInfo: { type: "Motocicleta", brand: "", plate: "" }, 
         legal: {
             contractVersion: "v1.2",
             signatureTimestamp: Date.now(),
             ipAddress: "NA" // Should capture user IP
         },
-        documents: {}, // Will be populated in step 2
+        documents: documentUrls,
         wallet: { currentBalance: 0, debtLimit: -500 },
         proStatus: { level: "Bronce", points: 0 },
-        operationalStatus: 'pending_validation', // Changed from uninitialized
+        operationalStatus: 'pending_validation',
         shipdayId: null,
       });
-
-      // 4. In a real app, trigger submitApplication Cloud Function here
 
       toast({
         title: '¡Solicitud Enviada!',
@@ -161,15 +192,6 @@ export function RegistrationForm() {
       setIsLoading(false);
     }
   };
-
-  const documents = [
-    { name: 'INE/Pasaporte', id: 'ine' },
-    { name: 'Licencia de Conducir', id: 'license' },
-    { name: 'Comprobante de Domicilio', id: 'addressProof' },
-    { name: 'Constancia de Situación Fiscal', id: 'taxId' },
-    { name: 'Tarjeta de Circulación', id: 'circulationCard' },
-    { name: 'Póliza de Seguro Vehicular', id: 'insurance' },
-  ];
 
   return (
     <FormProvider {...methods}>
@@ -212,12 +234,25 @@ export function RegistrationForm() {
               <p className="text-muted-foreground mb-6">Sube cada documento en formato PDF o JPG. Esta función se conectará a Cloud Storage.</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {documents.map(doc => (
-                  <FormItem key={doc.id}>
-                    <FormLabel>{doc.name}</FormLabel>
-                    <FormControl>
-                      <Input type="file" />
-                    </FormControl>
-                  </FormItem>
+                  <FormField
+                    key={doc.id}
+                    control={methods.control}
+                    name={doc.id}
+                    render={({ field: { onChange, ...field } }) => (
+                      <FormItem>
+                        <FormLabel>{doc.name}</FormLabel>
+                        <FormControl>
+                           <Input 
+                            type="file"
+                            accept=".pdf,.jpg,.jpeg,.png"
+                            onChange={(e) => onChange(e.target.files?.[0])}
+                            {...field}
+                           />
+                        </FormControl>
+                         <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 ))}
               </div>
             </div>
