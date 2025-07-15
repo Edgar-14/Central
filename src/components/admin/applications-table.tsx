@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -11,9 +12,10 @@ import { es } from 'date-fns/locale';
 
 interface ApplicationsTableProps {
   applications: Driver[];
+  onApplicationUpdate: () => void;
 }
 
-export function ApplicationsTable({ applications }: ApplicationsTableProps) {
+export function ApplicationsTable({ applications, onApplicationUpdate }: ApplicationsTableProps) {
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
 
   const handleReview = (driver: Driver) => {
@@ -50,10 +52,10 @@ export function ApplicationsTable({ applications }: ApplicationsTableProps) {
               <TableCell className="font-medium">{driver.personalInfo.fullName}</TableCell>
               <TableCell className="hidden md:table-cell">{driver.personalInfo.email}</TableCell>
               <TableCell className="hidden lg:table-cell">
-                {driver.legal.signatureTimestamp ? format(new Date(driver.legal.signatureTimestamp), "d 'de' MMMM, yyyy", { locale: es }) : 'N/A'}
+                {driver.applicationSubmittedAt ? format(new Date(driver.applicationSubmittedAt.seconds * 1000), "d 'de' MMMM, yyyy", { locale: es }) : 'N/A'}
               </TableCell>
               <TableCell className="hidden md:table-cell">
-                <Badge variant="outline">{driver.vehicleInfo.type}</Badge>
+                <Badge variant="outline">{driver.vehicleInfo?.type || 'No especificado'}</Badge>
               </TableCell>
               <TableCell className="text-right">
                 <Button variant="outline" size="sm" onClick={() => handleReview(driver)}>
@@ -69,6 +71,7 @@ export function ApplicationsTable({ applications }: ApplicationsTableProps) {
           driver={selectedDriver}
           isOpen={!!selectedDriver}
           onClose={handleCloseModal}
+          onApplicationUpdate={onApplicationUpdate}
         />
       )}
     </>

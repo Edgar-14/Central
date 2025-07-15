@@ -1,5 +1,11 @@
+
+import type { Timestamp } from 'firebase/firestore';
+
 export interface Driver {
   uid: string;
+  fullName: string;
+  email: string;
+  phone: string;
   personalInfo: {
     fullName: string;
     email: string;
@@ -35,6 +41,8 @@ export interface Driver {
     level: 'Bronce' | 'Plata' | 'Oro' | 'Diamante';
     points: number;
   };
+  applicationStatus: string;
+  applicationSubmittedAt?: Timestamp;
   operationalStatus: 'uninitialized' | 'pending_validation' | 'active' | 'restricted_debt' | 'suspended' | 'rejected';
   shipdayId: string | null;
 }

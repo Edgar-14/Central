@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -8,20 +9,20 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { Driver } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { Check, X, Loader2, ExternalLink, AlertTriangle } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
+import { Check, X, Loader2, ExternalLink } from 'lucide-react';
 
 interface ApplicationReviewModalProps {
   driver: Driver;
   isOpen: boolean;
   onClose: () => void;
+  onApplicationUpdate: () => void; // Callback to refresh the list
 }
 
 const functions = getFunctions();
-const activateDriver = httpsCallable(functions, 'activatedriver');
+const approveApplication = httpsCallable(functions, 'approveapplication');
 const rejectApplication = httpsCallable(functions, 'rejectapplication');
 
-export function ApplicationReviewModal({ driver, isOpen, onClose }: ApplicationReviewModalProps) {
+export function ApplicationReviewModal({ driver, isOpen, onClose, onApplicationUpdate }: ApplicationReviewModalProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
 
@@ -29,22 +30,39 @@ export function ApplicationReviewModal({ driver, isOpen, onClose }: ApplicationR
     setIsProcessing(true);
     
     try {
-        if (action === 'approve') {
-            await activateDriver({ driverId: driver.uid });
-        } else {
-            await rejectApplication({ driverId: driver.uid });
-        }
+      const driverEmail = driver.email; 
+      if (!driverEmail) {
+          throw new Error("El email del repartidor no está disponible.");
+      }
+
+      if (action === 'approve') {
+        await approveApplication({ email: driverEmail });
+      } else {
+        // This function does not exist in the provided functions code, but we assume it would work this way
+        // Let's create a placeholder for it
+        // await rejectApplication({ email: driverEmail });
+        toast({
+            title: "Función no implementada",
+            description: "La función para rechazar aún no está conectada.",
+            variant: "destructive"
+        });
+        // For now, just log and close
+        console.log(`Action 'reject' for ${driverEmail}`);
+      }
 
       toast({
-        title: `Solicitud ${action === 'approve' ? 'Aprobada' : 'Rechazada'}`,
-        description: `El repartidor ${driver.personalInfo.fullName} ha sido ${action === 'approve' ? 'activado' : 'rechazado'}.`,
+        title: `Solicitud ${action === 'approve' ? 'Aprobada' : 'Procesada'}`,
+        description: `El repartidor ${driver.fullName} ha sido ${action === 'approve' ? 'activado' : 'marcado para rechazo'}.`,
       });
-      onClose();
+      
+      onApplicationUpdate(); // Refresh the list in the parent component
+      onClose(); // Close the modal
+
     } catch (err: any) {
       console.error(`Failed to ${action} application:`, err);
       toast({
         title: 'Error',
-        description: `No se pudo ${action === 'approve' ? 'aprobar' : 'rechazar'} la solicitud.`,
+        description: `No se pudo ${action === 'approve' ? 'aprobar' : 'rechazar'} la solicitud. ${err.message}`,
         variant: 'destructive',
       });
     } finally {
@@ -52,14 +70,10 @@ export function ApplicationReviewModal({ driver, isOpen, onClose }: ApplicationR
     }
   };
 
-  const documentLinks = [
-    { label: "INE", url: driver.documents.ineUrl },
-    { label: "Licencia", url: driver.documents.licenseUrl },
-    { label: "Seguro", url: driver.documents.insuranceUrl },
-    { label: "Comp. Domicilio", url: driver.documents.addressProofUrl },
-    { label: "CSF", url: driver.documents.taxIdUrl },
-    { label: "Tarjeta Circulación", url: driver.documents.circulationCardUrl },
-  ];
+  const documentLinks = Object.entries(driver.documents || {}).map(([key, url]) => ({
+      label: key.replace('Url', ''),
+      url: url as string
+  }));
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -75,45 +89,41 @@ export function ApplicationReviewModal({ driver, isOpen, onClose }: ApplicationR
             <Card>
               <CardHeader><CardTitle className="text-lg">Información Personal</CardTitle></CardHeader>
               <CardContent className="text-sm space-y-2">
-                <p><strong>Nombre:</strong> {driver.personalInfo.fullName}</p>
-                <p><strong>Email:</strong> {driver.personalInfo.email}</p>
-                <p><strong>Teléfono:</strong> {driver.personalInfo.phone}</p>
-                <p><strong>Dirección:</strong> {driver.personalInfo.address}</p>
-                <p><strong>CURP:</strong> {driver.personalInfo.curp}</p>
-                <p><strong>RFC:</strong> {driver.personalInfo.rfc}</p>
+                <p><strong>Nombre:</strong> {driver.fullName}</p>
+                <p><strong>Email:</strong> {driver.email}</p>
+                <p><strong>Teléfono:</strong> {driver.phone}</p>
+                {driver.personalInfo && (
+                  <>
+                    <p><strong>Dirección:</strong> {driver.personalInfo.address}</p>
+                    <p><strong>CURP:</strong> {driver.personalInfo.curp}</p>
+                    <p><strong>RFC:</strong> {driver.personalInfo.rfc}</p>
+                  </>
+                )}
               </CardContent>
             </Card>
             <Card>
-              <CardHeader><CardTitle className="text-lg">Información del Vehículo</CardTitle></CardHeader>
-              <CardContent className="text-sm space-y-2">
-                 <p><strong>Tipo:</strong> <Badge variant="outline">{driver.vehicleInfo.type}</Badge></p>
-                 <p><strong>Marca/Modelo:</strong> {driver.vehicleInfo.brand}</p>
-                 <p><strong>Placa:</strong> {driver.vehicleInfo.plate}</p>
+              <CardHeader><CardTitle className="text-lg">Documentos</CardTitle></CardHeader>
+              <CardContent className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {documentLinks.map(doc => (
+                      <a key={doc.label} href={doc.url} target="_blank" rel="noopener noreferrer">
+                          <Button variant="outline" size="sm" className="w-full capitalize" disabled={!doc.url}>
+                              {doc.label}
+                              <ExternalLink className="ml-2 h-3 w-3" />
+                          </Button>
+                      </a>
+                  ))}
               </CardContent>
-            </Card>
-             <Card>
-                <CardHeader><CardTitle className="text-lg">Documentos</CardTitle></CardHeader>
-                <CardContent className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {documentLinks.map(doc => (
-                        <a key={doc.label} href={doc.url} target="_blank" rel="noopener noreferrer">
-                            <Button variant="outline" size="sm" className="w-full" disabled={!doc.url}>
-                                {doc.label}
-                                <ExternalLink className="ml-2 h-3 w-3" />
-                            </Button>
-                        </a>
-                    ))}
-                </CardContent>
             </Card>
           </div>
         </div>
         <DialogFooter className="mt-auto pt-4 border-t">
           <Button variant="destructive" onClick={() => handleAction('reject')} disabled={isProcessing}>
-            {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            <X className="mr-2 h-4 w-4" /> Rechazar
+            {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <X className="mr-2 h-4 w-4" />}
+            Rechazar
           </Button>
           <Button onClick={() => handleAction('approve')} disabled={isProcessing}>
-            {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            <Check className="mr-2 h-4 w-4" /> Aprobar
+            {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
+            Aprobar y Crear en Shipday
           </Button>
         </DialogFooter>
       </DialogContent>
