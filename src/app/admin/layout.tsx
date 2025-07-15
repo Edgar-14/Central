@@ -12,6 +12,7 @@ import {
   Users,
   FilePlus,
   RefreshCw,
+  Settings,
 } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
@@ -62,6 +63,7 @@ export default function AdminLayout({
         { href: "/admin/dashboard", icon: Home, label: "Dashboard" },
         { href: "/admin/applications", icon: FilePlus, label: "Solicitudes", badge: pendingApplications > 0 ? pendingApplications : undefined },
         { href: "/admin/drivers", icon: Users, label: "Repartidores" },
+        { href: "/admin/settings", icon: Settings, label: "Ajustes" },
         { href: "/admin/sync", icon: RefreshCw, label: "Sincronización Manual" },
     ]
 

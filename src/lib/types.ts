@@ -66,8 +66,27 @@ export interface Driver {
 export interface Transaction {
   id: string;
   date: Timestamp; // Using Firestore Timestamp
-  type: 'credit_delivery' | 'debit_commission' | 'payout' | 'credit_tip';
+  type: 'credit_delivery' | 'debit_commission' | 'payout' | 'credit_tip' | 'credit_incentive' | 'adjustment';
   amount: number;
   orderId?: string;
   description: string;
+}
+
+// Global settings managed by admins
+export interface RainFee {
+    active: boolean;
+    amount: number;
+}
+
+export interface Incentive {
+    id: string;
+    description: string;
+    amount: number;
+    active: boolean;
+}
+
+export interface OperationalSettings {
+    baseCommission: number;
+    rainFee: RainFee;
+    incentives: Incentive[];
 }

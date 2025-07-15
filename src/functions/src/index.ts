@@ -206,6 +206,11 @@ export const shipdaywebhook = onRequest(async (req, res) => {
         return;
     }
 
+    const settingsDoc = await getFirestore().collection('operationalSettings').doc('global').get();
+    const settings = settingsDoc.data() || {};
+    const baseCommission = settings.baseCommission || 15.00;
+    const rainFee = (settings.rainFee?.active && settings.rainFee?.amount > 0) ? settings.rainFee.amount : 0;
+
     const driverQuery = await getFirestore().collection("drivers").where("shipdayId", "==", driverId).limit(1).get();
     if (driverQuery.empty) {
         console.error(`No se encontró repartidor con Shipday ID: ${driverId}`);
@@ -220,22 +225,30 @@ export const shipdaywebhook = onRequest(async (req, res) => {
             if (!driverDoc.exists) throw new Error(`Driver not found.`);
             
             let totalCredit = 0;
-            let transactionDescription = '';
+            const transactionDescription: string[] = [];
             
+            // 1. Calculate base earning or commission
             if (order.paymentMethod !== 'CASH') {
                 const deliveryFee = order.costing?.deliveryFee || 0;
                 totalCredit += deliveryFee;
-                transactionDescription = `Ganancia por entrega #${orderId}`;
+                transactionDescription.push(`Ganancia por entrega #${orderId}`);
             } else { // CASH
-                 const commission = -15.00; // Fixed commission for cash orders
+                 const commission = -baseCommission; 
                  totalCredit += commission;
-                 transactionDescription = `Comisión por servicio en efectivo #${orderId}`;
+                 transactionDescription.push(`Comisión (efectivo) #${orderId}`);
             }
 
+            // 2. Add tip if any
             const tip = order.costing?.tip || 0;
             if (tip > 0) {
                  totalCredit += tip;
-                 transactionDescription += ` + Propina: $${tip.toFixed(2)}`;
+                 transactionDescription.push(`Propina: $${tip.toFixed(2)}`);
+            }
+            
+            // 3. Add rain fee if active
+            if (rainFee > 0) {
+                totalCredit += rainFee;
+                transactionDescription.push(`Tarifa lluvia: $${rainFee.toFixed(2)}`);
             }
              
             transaction.update(driverDocRef, { "wallet.currentBalance": FieldValue.increment(totalCredit) });
@@ -243,10 +256,10 @@ export const shipdaywebhook = onRequest(async (req, res) => {
             const transactionRef = driverDocRef.collection("transactions").doc();
             transaction.set(transactionRef, {
                 date: FieldValue.serverTimestamp(),
-                type: order.paymentMethod !== 'CASH' ? 'credit_delivery' : 'debit_commission',
+                type: 'credit_delivery', // Consolidate type
                 amount: totalCredit,
                 orderId: orderId,
-                description: transactionDescription,
+                description: transactionDescription.join(' | '),
             });
 
         });
@@ -254,5 +267,24 @@ export const shipdaywebhook = onRequest(async (req, res) => {
     } catch (error) {
         console.error(`Error procesando webhook para pedido ${orderId}:`, error);
         res.status(500).send("Internal Server Error");
+    }
+});
+
+
+export const updateOperationalSettings = onCall(async (request) => {
+    if (request.auth?.token.role !== "admin" && request.auth?.token.role !== 'superadmin') {
+      throw new HttpsError("permission-denied", "Solo los administradores pueden modificar los ajustes.");
+    }
+    
+    const settingsData = request.data;
+    // Optional: Add server-side validation here with Zod or another library.
+
+    try {
+        const settingsRef = getFirestore().collection('operationalSettings').doc('global');
+        await settingsRef.set(settingsData, { merge: true });
+        return { success: true, message: "Ajustes operativos actualizados." };
+    } catch (error) {
+        console.error("Error al guardar los ajustes operativos:", error);
+        throw new HttpsError("internal", "No se pudieron guardar los ajustes.");
     }
 });

@@ -41,10 +41,23 @@ Ubicada dentro de cada documento de `drivers`, esta subcolección almacena el hi
 | Campo | Tipo de Dato | Descripción | Ejemplo |
 | :--- | :--- | :--- | :--- |
 | `date` | `timestamp` | Fecha y hora de la transacción. | `Timestamp(seconds=...)` |
-| `type` | `string` | Tipo de movimiento. | `"credit_delivery"`, `"debit_commission"`, `"payout"` |
+| `type` | `string` | Tipo de movimiento. | `"credit_delivery"`, `"debit_commission"`, `"payout"`, `"credit_tip"`, `"credit_incentive"` |
 | `amount` | `number` | Monto de la transacción (positivo para créditos, negativo para débitos). | `150.75`, `-15.00` |
 | `orderId` | `string` | ID del pedido asociado a la transacción (si aplica). | `"order12345"` |
-| `description` | `string` | Descripción legible de la transacción. | `"Ganancia por entrega"`, `"Comisión de servicio"` |
+| `description` | `string` | Descripción legible de la transacción. | `"Ganancia por entrega"`, `"Comisión de servicio"`, `"Bono de fin de semana"` |
 
 ---
 
+## Colección: `operationalSettings`
+
+Esta colección almacena las variables de configuración operativa global que los administradores pueden modificar en tiempo real. Contiene un único documento.
+
+**ID del Documento:** `global`
+
+### Campos del Documento
+
+| Campo | Tipo de Dato | Descripción | Ejemplo |
+| :--- | :--- | :--- | :--- |
+| `baseCommission` | `number` | La comisión fija que se cobra por cada pedido en efectivo. | `15.00` |
+| `rainFee` | `map` | Configuración de la tarifa por lluvia. | `{ "active": true, "amount": 20.00 }` |
+| `incentives` | `array` | Una lista de los incentivos o bonos actualmente disponibles. | `[ { "id": "...", "description": "Bono por 10 entregas", "amount": 100.00, "active": true } ]` |
