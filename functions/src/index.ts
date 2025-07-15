@@ -140,9 +140,43 @@ export const approveapplication = onCall<{email: string}>(async (request) => {
     return { success: true, message: "Repartidor aprobado y activado con éxito." };
 });
 
-// Other administrative functions remain the same...
+// Other administrative functions...
+export const rejectapplication = onCall<{email: string}>(async (request) => {
+    if (request.auth?.token.role !== "admin" && request.auth?.token.role !== 'superadmin') {
+      throw new HttpsError("permission-denied", "Solo los administradores pueden rechazar solicitudes.");
+    }
+    const email = request.data.email?.toLowerCase();
+    if (!email) {
+        throw new HttpsError("invalid-argument", "La función debe ser llamada con un 'email'.");
+    }
 
-// The webhook function remains the same...
-export const shipdaywebhook = onRequest(async (req, res) => {
-  // ... (código del webhook sin cambios)
+    const driverDocRef = getFirestore().collection("drivers").doc(email);
+    await driverDocRef.update({
+        status: "rejected",
+        applicationStatus: "rejected",
+    });
+    return { success: true, message: "Solicitud rechazada." };
 });
+
+export const suspenddriver = onCall<{driverId: string}>(async (request) => { 
+    if (request.auth?.token.role !== "admin" && request.auth?.token.role !== 'superadmin') {
+        throw new HttpsError("permission-denied", "Solo los administradores pueden suspender repartidores.");
+    }
+    const driverId = request.data.driverId; // This is the email
+    await getFirestore().collection("drivers").doc(driverId).update({ operationalStatus: "suspended" });
+    return { success: true, message: "Repartidor suspendido." };
+});
+
+export const restrictdriver = onCall<{driverId: string}>(async (request) => { 
+    if (request.auth?.token.role !== "admin" && request.auth?.token.role !== 'superadmin') {
+        throw new HttpsError("permission-denied", "Solo los administradores pueden restringir repartidores.");
+    }
+    const driverId = request.data.driverId; // This is the email
+    await getFirestore().collection("drivers").doc(driverId).update({ operationalStatus: "restricted_debt" });
+    return { success: true, message: "Repartidor restringido por deuda." };
+});
+
+// The webhook function can be added back here if needed in the future
+// export const shipdaywebhook = onRequest(async (req, res) => {
+//   // ... webhook logic
+// });
