@@ -12,7 +12,7 @@ export default function RegisterPage() {
            backgroundPosition: 'center',
            backgroundAttachment: 'fixed'
          }}>
-      <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div className="relative z-10 container mx-auto max-w-4xl">
         <Card className="w-full glass-card">
           <CardHeader className="text-center">
