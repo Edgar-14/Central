@@ -1,0 +1,35 @@
+import Link from 'next/link';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { LoginForm } from '@/components/auth/login-form';
+import { Logo } from '@/components/shared/logo';
+
+export default function LoginPage() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900 p-4"
+         style={{
+           backgroundImage: `url('https://i.ibb.co/RpQSDQZJ/226A1568.jpg')`,
+           backgroundSize: 'cover',
+           backgroundPosition: 'center',
+         }}>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div className="relative z-10 w-full max-w-md">
+        <Card className="glass-card">
+          <CardHeader className="text-center">
+            <Logo className="mb-4 justify-center" textClassName="text-2xl" />
+            <CardTitle className="text-2xl">Bienvenido de Nuevo</CardTitle>
+            <CardDescription>Ingresa a tu portal de repartidor o administrador.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <LoginForm />
+            <div className="mt-4 text-center text-sm">
+              ¿No tienes una cuenta?{' '}
+              <Link href="/register" className="font-semibold text-primary underline-offset-4 hover:underline">
+                Regístrate aquí
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
