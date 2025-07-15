@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -7,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, AlertTriangle } from 'lucide-react';
+import { Loader2, AlertTriangle, ShieldCheck, Banknote } from 'lucide-react';
 import type { Driver, Transaction } from '@/lib/types';
 import { toDate } from 'date-fns';
 
@@ -54,7 +55,15 @@ export function DriverWallet() {
       }
     };
 
-    fetchDriverData();
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+        if (user) {
+            fetchDriverData();
+        } else {
+            setIsLoading(false);
+        }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   if (isLoading) {
@@ -76,7 +85,13 @@ export function DriverWallet() {
   }
 
   if (!driver) {
-    return null;
+    return (
+         <Alert>
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>No Encontrado</AlertTitle>
+            <AlertDescription>No se pudo cargar la información del repartidor. Por favor, vuelve a iniciar sesión.</AlertDescription>
+        </Alert>
+    );
   }
   
   const formatCurrency = (amount: number) => {
@@ -100,7 +115,7 @@ export function DriverWallet() {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-3">
         <Card>
           <CardHeader>
             <CardTitle>Saldo Actual</CardTitle>
@@ -117,12 +132,23 @@ export function DriverWallet() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>Estatus BeFast Pro</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Límite de Deuda</CardTitle>
+            <Banknote className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+             <p className="text-2xl font-bold">{formatCurrency(driver.wallet.debtLimit)}</p>
+             <p className="text-xs text-muted-foreground">Límite para pedidos en efectivo</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader  className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Estatus BeFast Pro</CardTitle>
+             <ShieldCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent className="flex items-center gap-4">
              <Badge className="text-lg py-2 px-4">{driver.proStatus.level}</Badge>
-             <p className="text-xl font-semibold">{driver.proStatus.points} puntos</p>
+             <p className="text-xl font-semibold">{driver.proStatus.points} pts</p>
           </CardContent>
         </Card>
       </div>

@@ -1,4 +1,5 @@
 
+
 import {initializeApp} from "firebase-admin/app";
 import {getAuth} from "firebase-admin/auth";
 import {getFirestore, FieldValue} from "firebase-admin/firestore";
@@ -103,6 +104,7 @@ export const approveapplication = onCall<{email: string}>(async (request) => {
         operationalStatus: "active",
         shipdayId: shipdayResult.id,
         approvedAt: FieldValue.serverTimestamp(),
+        "wallet.debtLimit": -500, // Set initial debt limit
     });
     
     return { success: true, message: "Repartidor aprobado y activado con éxito." };
@@ -163,10 +165,16 @@ export const recordPayout = onCall<{driverEmail: string, amount: number, notes?:
                 throw new HttpsError("not-found", `No se encontró al repartidor ${driverEmail}`);
             }
             
-            const currentBalance = driverDoc.data()?.wallet.currentBalance || 0;
+            const driverData = driverDoc.data();
+            const currentBalance = driverData?.wallet.currentBalance || 0;
             const newBalance = currentBalance - amount;
 
-            transaction.update(driverDocRef, { "wallet.currentBalance": newBalance });
+            const updates: {[key: string]: any} = { "wallet.currentBalance": newBalance };
+            if (driverData?.operationalStatus === 'restricted_debt' && newBalance >= (driverData?.wallet.debtLimit || -500)) {
+                updates.operationalStatus = 'active';
+            }
+
+            transaction.update(driverDocRef, updates);
 
             const transactionRef = driverDocRef.collection("transactions").doc();
             transaction.set(transactionRef, {
@@ -210,50 +218,37 @@ export const shipdaywebhook = onRequest(async (req, res) => {
         await getFirestore().runTransaction(async (transaction) => {
             const driverDoc = await transaction.get(driverDocRef);
             if (!driverDoc.exists) throw new Error(`Driver not found.`);
-
-            const wallet = driverDoc.data()?.wallet || { currentBalance: 0 };
-            const db = getFirestore();
             
-            // Transaction for delivery fee
+            let totalCredit = 0;
+            let transactionDescription = '';
+            
             if (order.paymentMethod !== 'CASH') {
                 const deliveryFee = order.costing?.deliveryFee || 0;
-                if(deliveryFee > 0) {
-                    const creditRef = driverDocRef.collection("transactions").doc();
-                    transaction.set(creditRef, {
-                        date: FieldValue.serverTimestamp(),
-                        type: 'credit_delivery',
-                        amount: deliveryFee,
-                        orderId: orderId,
-                        description: `Ganancia por entrega #${orderId}`,
-                    });
-                    transaction.update(driverDocRef, { "wallet.currentBalance": FieldValue.increment(deliveryFee) });
-                }
+                totalCredit += deliveryFee;
+                transactionDescription = `Ganancia por entrega #${orderId}`;
             } else { // CASH
-                 const commission = 15.00; // Fixed commission for cash orders
-                 const debitRef = driverDocRef.collection("transactions").doc();
-                 transaction.set(debitRef, {
-                    date: FieldValue.serverTimestamp(),
-                    type: 'debit_commission',
-                    amount: -commission,
-                    orderId: orderId,
-                    description: `Comisión por servicio en efectivo #${orderId}`,
-                 });
-                 transaction.update(driverDocRef, { "wallet.currentBalance": FieldValue.increment(-commission) });
+                 const commission = -15.00; // Fixed commission for cash orders
+                 totalCredit += commission;
+                 transactionDescription = `Comisión por servicio en efectivo #${orderId}`;
             }
 
-            // Transaction for tip
             const tip = order.costing?.tip || 0;
             if (tip > 0) {
-                 const tipRef = driverDocRef.collection("transactions").doc();
-                 transaction.set(tipRef, {
-                    date: FieldValue.serverTimestamp(),
-                    type: 'credit_tip',
-                    amount: tip,
-                    orderId: orderId,
-                    description: `Propina recibida por pedido #${orderId}`,
-                 });
-                 transaction.update(driverDocRef, { "wallet.currentBalance": FieldValue.increment(tip) });
+                 totalCredit += tip;
+                 transactionDescription += ` + Propina: $${tip.toFixed(2)}`;
             }
+             
+            transaction.update(driverDocRef, { "wallet.currentBalance": FieldValue.increment(totalCredit) });
+
+            const transactionRef = driverDocRef.collection("transactions").doc();
+            transaction.set(transactionRef, {
+                date: FieldValue.serverTimestamp(),
+                type: order.paymentMethod !== 'CASH' ? 'credit_delivery' : 'debit_commission',
+                amount: totalCredit,
+                orderId: orderId,
+                description: transactionDescription,
+            });
+
         });
         res.status(200).send("Wallet updated successfully.");
     } catch (error) {

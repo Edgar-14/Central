@@ -92,10 +92,10 @@ const trainingModules: {
 
 const contractUrl = "https://firebasestorage.googleapis.com/v0/b/befast-central.appspot.com/o/legal%2FContrato-BeFast-Repartidor-Ejemplo.pdf?alt=media&token=e9e6a9a4-6b21-4d38-8e6e-21e3c83b8b05";
 const annexLinks = {
-    anexo1: "/#", // Placeholder
-    anexo2: "/#",
-    anexo3: "/#",
-    anexo4: "/#",
+    anexo1: "/#", // Placeholder for Política Financiera
+    anexo2: "/#", // Placeholder for Protocolo de Revisión
+    anexo3: "/#", // Placeholder for Beneficiarios
+    anexo4: "/#", // Placeholder for Protocolo de Accidentes
 }
 
 export function RegistrationForm() {
@@ -367,17 +367,17 @@ export function RegistrationForm() {
                 </CardHeader>
                 <CardContent className="p-2">
                    <div className="w-full h-64 border rounded-md p-4 overflow-y-auto text-xs bg-white dark:bg-gray-800 space-y-2">
-                    <h4 className="font-bold text-center mb-2">CONTRATO INDIVIDUAL DE TRABAJO BAJO EL ESQUEMA DE PLATAFORMA DIGITAL</h4>
-                    <p><strong>DECLARACIONES:</strong></p>
-                    <p><strong>I.- "El Patrón":</strong> a) Que es una sociedad legalmente constituida... b) RFC [RFC DEL PATRÓN]... c) Domicilio en Boulevard Camino Real 1095 Interior 1, Colima...</p>
-                    <p><strong>II.- "El Trabajador":</strong> a) Ser de nacionalidad mexicana, mayor de edad... b) Que su domicilio es correcto... c) Que cuenta con la capacidad y medios propios (vehículo, teléfono)... d) Que posee licencias y seguros vigentes...</p>
-                    <p><strong>CLÁUSULAS:</strong></p>
-                    <p><strong>PRIMERA.- OBJETO.</strong> Prestar servicios personales subordinados de repartidor mediante la plataforma BEFAST...</p>
-                    <p><strong>SEGUNDA.- DURACIÓN.</strong> Contrato por tiempo indeterminado...</p>
-                    <p><strong>TERCERA.- PERIODO DE PRUEBA.</strong> 30 días...</p>
-                    <p><strong>QUINTA.- JORNADA.</strong> Fluctuante, con libertad de conexión...</p>
-                    <p><strong>SÉPTIMA.- BILLETERA DIGITAL.</strong> Todas las transacciones se gestionan aquí. Se autoriza el débito de comisión ($15.00 MXN) en pedidos de efectivo...</p>
-                    <p className="text-center font-bold mt-2">[El contenido completo se puede revisar en el PDF descargable]</p>
+                        <h4 className="font-bold text-center mb-2">CONTRATO INDIVIDUAL DE TRABAJO BAJO EL ESQUEMA DE PLATAFORMA DIGITAL</h4>
+                        <p><strong>DECLARACIONES:</strong></p>
+                        <p><strong>I.- "El Patrón":</strong> a) Que es una sociedad legalmente constituida... b) RFC [RFC DEL PATRÓN]... c) Domicilio en Boulevard Camino Real 1095 Interior 1, Colima...</p>
+                        <p><strong>II.- "El Trabajador":</strong> a) Ser de nacionalidad mexicana, mayor de edad... b) Que su domicilio es correcto... c) Que cuenta con la capacidad y medios propios (vehículo, teléfono)... d) Que posee licencias y seguros vigentes...</p>
+                        <p><strong>CLÁUSULAS:</strong></p>
+                        <p><strong>PRIMERA.- OBJETO.</strong> Prestar servicios personales subordinados de repartidor mediante la plataforma BEFAST...</p>
+                        <p><strong>SEGUNDA.- DURACIÓN.</strong> Contrato por tiempo indeterminado...</p>
+                        <p><strong>TERCERA.- PERIODO DE PRUEBA.</strong> 30 días...</p>
+                        <p><strong>SÉPTIMA.- BILLETERA DIGITAL.</strong> Todas las transacciones se gestionan aquí. Se autoriza el débito de comisión ($15.00 MXN) en pedidos de efectivo...</p>
+                        <p><strong>VIGÉSIMA SEGUNDA (Aceptación Digital y Validez):</strong> "Las Partes" acuerdan y reconocen que la celebración del presente Contrato y sus Anexos se realiza por medios electrónicos...</p>
+                        <p className="text-center font-bold mt-2">[El contenido completo se puede revisar en el PDF descargable]</p>
                   </div>
                 </CardContent>
               </Card>
