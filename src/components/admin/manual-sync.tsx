@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 // Zod schema for form validation
 const formSchema = z.object({
@@ -25,7 +26,6 @@ type FormData = z.infer<typeof formSchema>;
 export function ManualSync() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const db = getFirestore();
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -44,13 +44,21 @@ export function ManualSync() {
       const docRef = doc(db, 'drivers', emailAsId);
 
       await setDoc(docRef, {
+        uid: `manual_${emailAsId}`, // Create a specific UID for manually added users
         fullName: data.fullName,
         email: emailAsId,
         phone: data.phone,
-        shipdayId: data.shipdayId,
-        status: 'approved', // Existing drivers are considered approved
-        applicationStatus: 'approved_manual_sync',
+        shipdayId: Number(data.shipdayId), // Ensure Shipday ID is stored as a number
+        applicationStatus: 'approved_manual_sync', 
+        operationalStatus: 'active',
         createdAt: new Date(),
+        // Initialize other required fields to default values
+        personalInfo: { fullName: data.fullName, email: emailAsId, phone: data.phone },
+        vehicleInfo: {},
+        documents: {},
+        legal: {},
+        wallet: { currentBalance: 0, debtLimit: -500 },
+        proStatus: { level: 'Bronce', points: 0 },
       }, { merge: true });
 
       toast({
@@ -121,7 +129,7 @@ export function ManualSync() {
                 <FormItem>
                   <FormLabel>Shipday Rider ID</FormLabel>
                   <FormControl>
-                    <Input placeholder="Introduce el ID numérico de Shipday" {...field} />
+                    <Input type="number" placeholder="Introduce el ID numérico de Shipday" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

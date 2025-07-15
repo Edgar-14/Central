@@ -1,3 +1,4 @@
+
 'use client'
 import {
   Bell,
@@ -9,6 +10,8 @@ import {
   Package2,
   ShoppingCart,
   Users,
+  FilePlus,
+  RefreshCw,
 } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
@@ -57,8 +60,9 @@ export default function AdminLayout({
 
     const navItems = [
         { href: "/admin/dashboard", icon: Home, label: "Dashboard" },
-        { href: "/admin/applications", icon: ShoppingCart, label: "Solicitudes", badge: pendingApplications > 0 ? pendingApplications : undefined },
-        { href: "/admin/drivers", icon: Package, label: "Repartidores" },
+        { href: "/admin/applications", icon: FilePlus, label: "Solicitudes", badge: pendingApplications > 0 ? pendingApplications : undefined },
+        { href: "/admin/drivers", icon: Users, label: "Repartidores" },
+        { href: "/admin/sync", icon: RefreshCw, label: "Sincronización Manual" },
     ]
 
     return (
@@ -100,8 +104,8 @@ export default function AdminLayout({
               </SheetTrigger>
               <SheetContent side="left" className="flex flex-col">
                 <SheetHeader>
-                    <SheetTitle className="self-start">
-                        <Logo/>
+                    <SheetTitle>
+                      Menú Principal
                     </SheetTitle>
                 </SheetHeader>
                 <nav className="grid gap-2 text-lg font-medium">
