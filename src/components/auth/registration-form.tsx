@@ -80,22 +80,22 @@ const trainingModules: {
     title: string;
     duration: string;
     type: 'video' | 'quiz' | 'upload';
-    content?: string; // URL for video or quiz link
-    fieldId?: keyof FormData; // Field ID for upload type
+    content?: string; 
+    fieldId?: keyof FormData;
 }[] = [
-    { id: 'module1', title: 'Introducción a BeFast y Nuestra App', type: 'video', duration: '5 min', content: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
-    { id: 'module2', title: 'Manejo de Pedidos y Tiempos de Entrega', type: 'video', duration: '10 min', content: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
-    { id: 'module3', title: 'Protocolos de Seguridad y Emergencias', type: 'video', duration: '8 min', content: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
-    { id: 'module4', title: 'Cuestionario de Evaluación Final', type: 'quiz', duration: '15 min', content: 'https://forms.gle/example' }, // Example link
+    { id: 'module1', title: 'Introducción a BeFast y Nuestra App', type: 'video', duration: '5 min', content: '' },
+    { id: 'module2', title: 'Manejo de Pedidos y Tiempos de Entrega', type: 'video', duration: '10 min', content: '' },
+    { id: 'module3', title: 'Protocolos de Seguridad y Emergencias', type: 'video', duration: '8 min', content: '' },
+    { id: 'module4', title: 'Cuestionario de Evaluación Final', type: 'quiz', duration: '15 min', content: '' }, 
     { id: 'module5', title: 'Evidencia: Foto de tu Mochila Térmica', type: 'upload', duration: '2 min', fieldId: 'trainingEvidenceUrl' },
 ];
 
 const contractUrl = "https://firebasestorage.googleapis.com/v0/b/befast-central.appspot.com/o/legal%2FContrato-BeFast-Repartidor-Ejemplo.pdf?alt=media&token=e9e6a9a4-6b21-4d38-8e6e-21e3c83b8b05";
 const annexLinks = {
-    anexo1: "/#", // Placeholder for Política Financiera
-    anexo2: "/#", // Placeholder for Protocolo de Revisión
-    anexo3: "/#", // Placeholder for Beneficiarios
-    anexo4: "/#", // Placeholder for Protocolo de Accidentes
+    anexo1: "/#",
+    anexo2: "/#",
+    anexo3: "/#",
+    anexo4: "/#",
 }
 
 export function RegistrationForm() {
@@ -103,7 +103,7 @@ export function RegistrationForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [completedModules, setCompletedModules] = useState<Set<string>>(new Set());
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
-  const [uid, setUid] = useState<string | null>(null); // Store UID after step 1
+  const [uid, setUid] = useState<string | null>(null);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -142,7 +142,6 @@ export function RegistrationForm() {
       fieldsToValidate = ['email', 'password', 'confirmPassword', 'fullName', 'phone', 'curp', 'rfc', 'nss', 'address'];
     }
      if (currentStep === 2) {
-      // Step 2 document upload is optional for now
     }
     if (currentStep === 3) {
       fieldsToValidate = ['acceptContract', 'acceptSignature', 'signatureName'];
@@ -151,13 +150,12 @@ export function RegistrationForm() {
     const isValid = fieldsToValidate.length > 0 ? await methods.trigger(fieldsToValidate) : true;
     
     if (isValid) {
-      // Special handling for step 1: create user and Firestore doc
       if (currentStep === 1) {
         setIsLoading(true);
         try {
           const { email, password, fullName, phone } = methods.getValues();
           const result = await registerNewUser({ email, password, fullName, phone }) as { data: { uid: string } };
-          setUid(result.data.uid); // Save UID for later steps
+          setUid(result.data.uid);
           toast({
             title: 'Cuenta Creada',
             description: 'Ahora continúa con los siguientes pasos.',
@@ -173,7 +171,7 @@ export function RegistrationForm() {
         } finally {
           setIsLoading(false);
         }
-        return; // Stop here and wait for user to proceed
+        return;
       }
 
       if (currentStep === 4 && !allModulesCompleted) {
@@ -216,11 +214,10 @@ export function RegistrationForm() {
   };
 
   const onSubmit = async (data: FormData) => {
-    if(currentStep !== 5 || !uid) return; // Only submit on the last step and if UID is set
+    if(currentStep !== 5 || !uid) return;
     setIsLoading(true);
     try {
       
-      // Upload documents to Cloud Storage
       const documentUrls: { [key: string]: string } = {};
       const allDocsToUpload = [...documents, { name: 'Evidencia de Capacitación', id: 'trainingEvidenceUrl' }];
       for (const doc of allDocsToUpload) {
@@ -234,9 +231,8 @@ export function RegistrationForm() {
           }
       }
 
-      // Call the submitApplication cloud function
       await submitApplication({
-        email: data.email, // Pass email to identify the document
+        email: data.email,
         personalInfo: {
           fullName: data.fullName,
           email: data.email,
@@ -250,7 +246,7 @@ export function RegistrationForm() {
         legal: {
           contractVersion: "v1.2",
           signatureTimestamp: Date.now(),
-          ipAddress: "NA" // Should capture user IP in a real app
+          ipAddress: "NA"
         },
       });
 
@@ -449,13 +445,13 @@ export function RegistrationForm() {
                                 <div className="flex items-center gap-2">
                                      {module.type === 'video' && (
                                         <>
-                                            <Button type="button" variant="secondary" size="sm" onClick={() => setSelectedVideo(module.content!)}>{getModuleIcon(module.type)} Ver Módulo</Button>
+                                            <Button type="button" variant="secondary" size="sm" onClick={() => module.content && setSelectedVideo(module.content)} disabled={!module.content}>{getModuleIcon(module.type)} Ver Módulo</Button>
                                             <Checkbox className="h-6 w-6" checked={completedModules.has(module.id)} onCheckedChange={() => toggleModuleCompletion(module.id)} />
                                         </>
                                     )}
                                     {module.type === 'quiz' && (
                                         <>
-                                            <a href={module.content} target="_blank" rel="noopener noreferrer"><Button type="button" variant="secondary" size="sm">{getModuleIcon(module.type)} Iniciar Cuestionario</Button></a>
+                                            <a href={module.content || '#'} target="_blank" rel="noopener noreferrer"><Button type="button" variant="secondary" size="sm" disabled={!module.content}>{getModuleIcon(module.type)} Iniciar Cuestionario</Button></a>
                                             <Checkbox className="h-6 w-6" checked={completedModules.has(module.id)} onCheckedChange={() => toggleModuleCompletion(module.id)} />
                                         </>
                                     )}

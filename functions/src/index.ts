@@ -10,13 +10,10 @@ import shipday from '../.api/apis/shipday';
 
 initializeApp();
 
-// Define secrets for API keys
 const SHIPDAY_API_KEY = defineString("SHIPDAY_API_KEY");
 const SHIPDAY_WEBHOOK_SECRET = defineString("SHIPDAY_WEBHOOK_SECRET");
 
-// Authenticate with Shipday SDK
 shipday.auth(SHIPDAY_API_KEY.value());
-
 
 export const registerNewUser = onCall<{email: string, password: string, fullName: string, phone: string}>(async (request) => {
     const { email, password, fullName, phone } = request.data;
@@ -67,7 +64,6 @@ interface SubmitApplicationData {
     legal: Record<string, unknown>;
 }
 
-// Called from frontend when a driver submits their application
 export const submitapplication = onCall<SubmitApplicationData>((request) => {
     if (!request.auth) throw new HttpsError("unauthenticated", "La función debe ser llamada por un usuario autenticado.");
     
@@ -87,7 +83,6 @@ export const submitapplication = onCall<SubmitApplicationData>((request) => {
     }).then(() => ({ success: true, message: "Solicitud enviada con éxito." }));
 });
 
-// 3. Called by an admin to approve an application
 export const approveapplication = onCall<{email: string}>(async (request) => {
     if (request.auth?.token.role !== "admin" && request.auth?.token.role !== 'superadmin') {
       throw new HttpsError("permission-denied", "Solo los administradores pueden activar repartidores.");
@@ -103,7 +98,6 @@ export const approveapplication = onCall<{email: string}>(async (request) => {
     const driverData = driverDoc.data();
     if (!driverData) throw new HttpsError("internal", "No se pudieron leer los datos del repartidor.");
 
-    // Step 1: Create driver in Shipday
     const { data: shipdayResult } = await shipday.insertDeliveryOrder({
         name: driverData.fullName, 
         email: driverData.email, 
@@ -114,10 +108,8 @@ export const approveapplication = onCall<{email: string}>(async (request) => {
          throw new HttpsError("internal", `Error al crear el repartidor en Shipday.`);
     }
     
-    // Step 2: Grant 'driver' role in Firebase Auth
     await getAuth().setCustomUserClaims(driverData.uid, { role: "driver" });
 
-    // Step 3: Update Firestore document
     await driverDocRef.update({
         applicationStatus: "approved",
         operationalStatus: "active",
@@ -129,8 +121,6 @@ export const approveapplication = onCall<{email: string}>(async (request) => {
     return { success: true, message: "Repartidor aprobado y activado con éxito." };
 });
 
-
-// 4. Called by admin to reject an application
 export const rejectapplication = onCall<{email: string}>(async (request) => {
     if (request.auth?.token.role !== "admin" && request.auth?.token.role !== 'superadmin') {
       throw new HttpsError("permission-denied", "Solo los administradores pueden rechazar solicitudes.");
@@ -146,8 +136,6 @@ export const rejectapplication = onCall<{email: string}>(async (request) => {
     return { success: true, message: "Solicitud rechazada." };
 });
 
-
-// 5. Called by webhook from Shipday when an order is assigned to a driver
 export const processAssignedOrder = onRequest(async (req, res) => {
     const { orderId, driverId, order } = req.body;
     
@@ -156,13 +144,11 @@ export const processAssignedOrder = onRequest(async (req, res) => {
         return;
     }
 
-    // Only apply logic for cash orders
     if (order.paymentMethod !== 'CASH') {
         res.status(200).send("No action needed for non-cash order.");
         return;
     }
 
-    // Find driver in Firestore by their Shipday ID
     const driversRef = getFirestore().collection('drivers');
     const q = driversRef.where('shipdayId', '==', driverId).limit(1);
     const snapshot = await q.get();
@@ -176,13 +162,11 @@ export const processAssignedOrder = onRequest(async (req, res) => {
     const driverDoc = snapshot.docs[0];
     const driverData = driverDoc.data();
 
-    // The core business logic: check if the driver should be taking cash orders
     const isRestricted = driverData.operationalStatus === 'restricted_debt';
     const hasExceededDebt = driverData.wallet.currentBalance <= driverData.wallet.debtLimit;
 
     if (isRestricted || hasExceededDebt) {
         try {
-            // Unassign the order from the driver via Shipday API
             await shipday.unassignOrderFromDriver({ orderId: orderId.toString() });
             console.log(`Order ${orderId} successfully unassigned from driver ${driverData.fullName} due to debt.`);
             res.status(200).send("Order unassigned due to debt restriction.");
@@ -195,7 +179,6 @@ export const processAssignedOrder = onRequest(async (req, res) => {
     }
 });
 
-// 6. Called by webhook from Shipday when an order is delivered
 export const updateDriverWallet = onRequest(async (req, res) => {
     const secret = req.headers['x-shipday-secret'];
     if (secret !== SHIPDAY_WEBHOOK_SECRET.value()) {
@@ -236,8 +219,7 @@ export const updateDriverWallet = onRequest(async (req, res) => {
             if (order.paymentMethod === 'CASH') {
                 totalCredit = -baseCommission;
                 transactionDescription.push(`Comisión (efectivo) #${orderId}`);
-            } else { // Card payment
-                // On card payments, first compensate debt
+            } else {
                 const debt = wallet.currentBalance < 0 ? Math.abs(wallet.currentBalance) : 0;
                 if (debt > 0) {
                     const paymentToDebt = Math.min(debt, deliveryFee);
@@ -274,7 +256,6 @@ export const updateDriverWallet = onRequest(async (req, res) => {
     }
 });
 
-// 7. Utility functions for admins
 export const suspenddriver = onCall<{driverId: string}>(async (request) => { 
     if (request.auth?.token.role !== "admin" && request.auth?.token.role !== 'superadmin') {
         throw new HttpsError("permission-denied", "Solo los administradores pueden suspender repartidores.");
@@ -305,7 +286,8 @@ export const recordPayout = onCall<{driverEmail: string, amount: number, notes?:
             if (!driverDoc.exists) throw new HttpsError("not-found", `No se encontró al repartidor ${driverEmail}`);
             
             const driverData = driverDoc.data();
-            const newBalance = (driverData?.wallet.currentBalance || 0) - amount;
+            const currentBalance = driverData?.wallet.currentBalance || 0;
+            const newBalance = currentBalance - amount;
 
             const updates: {[key: string]: any} = { "wallet.currentBalance": newBalance };
             if (driverData?.operationalStatus === 'restricted_debt' && newBalance >= (driverData?.wallet.debtLimit || -500)) {
