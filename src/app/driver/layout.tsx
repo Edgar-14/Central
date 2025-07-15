@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Bell, User, LifeBuoy, Wallet, Menu, LogOut, Shield } from 'lucide-react';
 import { Logo } from '@/components/shared/logo';
 import {
@@ -90,8 +90,10 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="flex flex-col">
+              <SheetHeader>
+                <SheetTitle className="self-start"><Logo /></SheetTitle>
+              </SheetHeader>
               <nav className="grid gap-2 text-lg font-medium">
-                <Logo />
                  {navItems.map((item) => (
                   <Link
                     key={item.label}
