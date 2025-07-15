@@ -49,16 +49,15 @@ export default function Home() {
   ];
 
   const sliderImages = [
-    { src: "https://i.ibb.co/rKK9rVd/226-A1715.jpg", alt: "Repartidor sonriendo" },
-    { src: "https://i.ibb.co/HLRmsn5/IMG-9924.jpg", alt: "Repartidor con entrega" },
-    { src: "https://i.ibb.co/XxYpq8m/IMG-9899.jpg", alt: "Preparación de comida" },
-    { src: "https://i.ibb.co/kg38Ksr/IMG-9827.jpg", alt: "Platillo preparado" },
-    { src: "https://i.ibb.co/Rxh9yTT/IMG-9823.jpg", alt: "Bolsa de entrega" },
-    { src: "https://i.ibb.co/SDP42mS/IMG-9831.jpg", alt: "Empaquetado de comida" },
-    { src: "https://i.ibb.co/RpQSDZJ/226-A1568.jpg", alt: "Cocina de restaurante" },
-    { src: "https://i.ibb.co/MrNdzc3/226-A1953.jpg", alt: "Persona conduciendo" },
-    { src: "https://i.ibb.co/1Gwk2Dk/226-A1904.jpg", alt: "Repartidor con casco" },
-    { src: "https://i.ibb.co/GQ09Wf7/226-A1559.jpg", alt: "Repartidor de BeFast" },
+    { src: "https://i.ibb.co/VW4ZqcM/226-A1904.jpg", alt: "Repartidor con casco" },
+    { src: "https://i.ibb.co/nNmzs9X/226-A1559.jpg", alt: "Repartidor de BeFast" },
+    { src: "https://i.ibb.co/4w1mgLt/IMG-9827.jpg", alt: "Platillo preparado" },
+    { src: "https://i.ibb.co/cKszc4J/IMG-9831.jpg", alt: "Empaquetado de comida" },
+    { src: "https://i.ibb.co/yccp3tv/IMG-9899.jpg", alt: "Preparación de comida" },
+    { src: "https://i.ibb.co/ycW9rS2/IMG-9924.jpg", alt: "Repartidor con entrega" },
+    { src: "https://i.ibb.co/XfJ50PL/226-A1568.jpg", alt: "Cocina de restaurante" },
+    { src: "https://i.ibb.co/cXVx3F8/226-A1715.jpg", alt: "Repartidor sonriendo" },
+    { src: "https://i.ibb.co/RTy11HM/226-A1953.jpg", alt: "Persona conduciendo" }
   ];
 
   return (
