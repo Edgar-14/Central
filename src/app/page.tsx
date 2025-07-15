@@ -49,24 +49,15 @@ export default function Home() {
   ];
 
   const sliderImages = [
-    { src: "https://placehold.co/800x600.png", alt: "Repartidor con casco", "data-ai-hint": "delivery driver" },
-    { src: "https://placehold.co/800x600.png", alt: "Repartidor de BeFast", "data-ai-hint": "delivery courier" },
-    { src: "https://placehold.co/800x600.png", alt: "Platillo preparado", "data-ai-hint": "food plate" },
-    { src: "https://placehold.co/800x600.png", alt: "Empaquetado de comida", "data-ai-hint": "food packaging" },
-    { src: "https://placehold.co/800x600.png", alt: "Preparación de comida", "data-ai-hint": "food preparation" },
-    { src: "https://placehold.co/800x600.png", alt: "Repartidor con entrega", "data-ai-hint": "courier delivery" },
-    { src: "https://placehold.co/800x600.png", alt: "Cocina de restaurante", "data-ai-hint": "restaurant kitchen" },
-    { src: "https://placehold.co/800x600.png", alt: "Repartidor sonriendo", "data-ai-hint": "happy courier" },
-    { src: "https://placehold.co/800x600.png", alt: "Persona conduciendo", "data-ai-hint": "person driving" },
-    { src: "https://placehold.co/800x600.png", alt: "Entrega en puerta", "data-ai-hint": "door delivery" },
-    { src: "https://placehold.co/800x600.png", alt: "Comida en bolsa", "data-ai-hint": "food bag" },
-    { src: "https://placehold.co/800x600.png", alt: "Repartidor en moto", "data-ai-hint": "motorcycle courier" },
-    { src: "https://placehold.co/800x600.png", alt: "Mapa de ciudad", "data-ai-hint": "city map" },
-    { src: "https://placehold.co/800x600.png", alt: "Cliente recibiendo pedido", "data-ai-hint": "customer order" },
-    { src: "https://placehold.co/800x600.png", alt: "Mochila de repartidor", "data-ai-hint": "delivery backpack" },
-    { src: "https://placehold.co/800x600.png", alt: "Teléfono con app", "data-ai-hint": "phone app" },
-    { src: "https://placehold.co/800x600.png", alt: "Restaurante", "data-ai-hint": "restaurant facade" },
-    { src: "https://placehold.co/800x600.png", alt: "Comida para llevar", "data-ai-hint": "takeaway food" }
+    { src: "https://firebasestorage.googleapis.com/v0/b/befast-central.appspot.com/o/86f61775-39e4-43a2-98da-69c8fda6b03e.jpg?alt=media", alt: "Repartidor con casco", "data-ai-hint": "delivery driver" },
+    { src: "https://firebasestorage.googleapis.com/v0/b/befast-central.appspot.com/o/9ebcc671-1eda-4ab5-80e9-040a89ac164d.jpg?alt=media", alt: "Repartidor de BeFast", "data-ai-hint": "delivery courier" },
+    { src: "https://firebasestorage.googleapis.com/v0/b/befast-central.appspot.com/o/226A6884.jpg?alt=media", alt: "Platillo preparado", "data-ai-hint": "food plate" },
+    { src: "https://firebasestorage.googleapis.com/v0/b/befast-central.appspot.com/o/226A6854.jpg?alt=media", alt: "Empaquetado de comida", "data-ai-hint": "food packaging" },
+    { src: "https://firebasestorage.googleapis.com/v0/b/befast-central.appspot.com/o/IMG_9806.jpg?alt=media", alt: "Preparación de comida", "data-ai-hint": "food preparation" },
+    { src: "https://firebasestorage.googleapis.com/v0/b/befast-central.appspot.com/o/Dise%C3%B1o%20sin%20t%C3%ADtulo%20(15).jpg?alt=media", alt: "Repartidor con entrega", "data-ai-hint": "courier delivery" },
+    { src: "https://firebasestorage.googleapis.com/v0/b/befast-central.appspot.com/o/8a8d3ecc-45a1-4725-ac10-fa222fcfe92a.jpg?alt=media", alt: "Cocina de restaurante", "data-ai-hint": "restaurant kitchen" },
+    { src: "https://firebasestorage.googleapis.com/v0/b/befast-central.appspot.com/o/Dise%C3%B1o%20sin%20t%C3%ADtulo%20(23).png?alt=media", alt: "Repartidor sonriendo", "data-ai-hint": "happy courier" },
+    { src: "https://firebasestorage.googleapis.com/v0/b/befast-central.appspot.com/o/Sin%20t%C3%ADtulo%20(2048%20x%202048%20px)%20(1).jpg?alt=media", alt: "Persona conduciendo", "data-ai-hint": "person driving" },
   ];
 
   return (
