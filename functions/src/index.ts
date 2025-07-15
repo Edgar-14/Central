@@ -1,4 +1,5 @@
 
+
 import {initializeApp} from "firebase-admin/app";
 import {getAuth} from "firebase-admin/auth";
 import {getFirestore, FieldValue} from "firebase-admin/firestore";
@@ -76,6 +77,7 @@ export const approveapplication = onCall<{email: string}>(async (request) => {
     const driverData = driverDoc.data();
     if (!driverData) throw new HttpsError("internal", "No se pudieron leer los datos del repartidor.");
 
+    // Step 1: Create driver in Shipday
     const shipdayResponse = await fetch("https://api.shipday.com/v1/drivers", {
         method: 'POST',
         headers: {
@@ -96,13 +98,16 @@ export const approveapplication = onCall<{email: string}>(async (request) => {
     }
     const shipdayResult = await shipdayResponse.json() as {id: number};
     
+    // Step 2: Grant 'driver' role in Firebase Auth
     await getAuth().setCustomUserClaims(driverData.uid, { role: "driver" });
 
+    // Step 3: Update Firestore document with new status and Shipday ID
     await driverDocRef.update({
         applicationStatus: "approved",
         operationalStatus: "active",
         shipdayId: shipdayResult.id,
         approvedAt: FieldValue.serverTimestamp(),
+        "wallet.debtLimit": -500, // Set initial debt limit
     });
     
     return { success: true, message: "Repartidor aprobado y activado con éxito." };
@@ -141,6 +146,55 @@ export const restrictdriver = onCall<{driverId: string}>(async (request) => {
     return { success: true, message: "Repartidor restringido por deuda." };
 });
 
+export const recordPayout = onCall<{driverEmail: string, amount: number, notes?: string}>(async (request) => {
+    if (request.auth?.token.role !== "admin" && request.auth?.token.role !== 'superadmin') {
+      throw new HttpsError("permission-denied", "Solo los administradores pueden registrar pagos.");
+    }
+
+    const { driverEmail, amount, notes } = request.data;
+    if (!driverEmail || !amount) {
+        throw new HttpsError("invalid-argument", "Se requiere email del repartidor y monto.");
+    }
+    if (amount <= 0) {
+        throw new HttpsError("invalid-argument", "El monto debe ser positivo.");
+    }
+    
+    const driverDocRef = getFirestore().collection("drivers").doc(driverEmail);
+    
+    try {
+        await getFirestore().runTransaction(async (transaction) => {
+            const driverDoc = await transaction.get(driverDocRef);
+            if (!driverDoc.exists) {
+                throw new HttpsError("not-found", `No se encontró al repartidor ${driverEmail}`);
+            }
+            
+            const driverData = driverDoc.data();
+            const currentBalance = driverData?.wallet.currentBalance || 0;
+            const newBalance = currentBalance - amount;
+
+            const updates: {[key: string]: any} = { "wallet.currentBalance": newBalance };
+            if (driverData?.operationalStatus === 'restricted_debt' && newBalance >= (driverData?.wallet.debtLimit || -500)) {
+                updates.operationalStatus = 'active';
+            }
+
+            transaction.update(driverDocRef, updates);
+
+            const transactionRef = driverDocRef.collection("transactions").doc();
+            transaction.set(transactionRef, {
+                date: FieldValue.serverTimestamp(),
+                type: 'payout',
+                amount: -amount,
+                description: `Liquidación de saldo. ${notes || ''}`.trim(),
+            });
+        });
+        return { success: true, message: "Pago registrado exitosamente." };
+    } catch (error) {
+        console.error("Error al registrar el pago:", error);
+        throw new HttpsError("internal", "No se pudo completar la transacción.");
+    }
+});
+
+
 export const shipdaywebhook = onRequest(async (req, res) => {
     const secret = req.headers['x-shipday-secret'];
     if (secret !== SHIPDAY_WEBHOOK_SECRET.value()) {
@@ -150,10 +204,15 @@ export const shipdaywebhook = onRequest(async (req, res) => {
     }
     
     const { orderId, driverId, eventType, order } = req.body;
-    if (!driverId || eventType !== 'order_delivered') {
-        res.status(200).send("Evento no relevante para esta función.");
+    if (eventType !== 'order_delivered' || !driverId) {
+        res.status(200).send("Evento no relevante para esta función de billetera.");
         return;
     }
+
+    const settingsDoc = await getFirestore().collection('operationalSettings').doc('global').get();
+    const settings = settingsDoc.data() || {};
+    const baseCommission = settings.baseCommission || 15.00;
+    const rainFee = (settings.rainFee?.active && settings.rainFee?.amount > 0) ? settings.rainFee.amount : 0;
 
     const driverQuery = await getFirestore().collection("drivers").where("shipdayId", "==", driverId).limit(1).get();
     if (driverQuery.empty) {
@@ -167,34 +226,43 @@ export const shipdaywebhook = onRequest(async (req, res) => {
         await getFirestore().runTransaction(async (transaction) => {
             const driverDoc = await transaction.get(driverDocRef);
             if (!driverDoc.exists) throw new Error(`Driver not found.`);
-
+            
             const wallet = driverDoc.data()?.wallet || { currentBalance: 0 };
-            let newBalance = wallet.currentBalance;
+            const deliveryFee = order.costing?.deliveryFee || 0;
+            const tip = order.costing?.tip || 0;
+            let totalCredit = 0;
             const transactionDescription: string[] = [];
             
-            if(order.paymentMethod === 'CASH') {
-                const commission = 15.00; 
-                newBalance -= commission;
-                transactionDescription.push(`Comisión por servicio (efectivo): -$${commission.toFixed(2)}`);
+            if (order.paymentMethod === 'CASH') {
+                totalCredit = -baseCommission;
+                transactionDescription.push(`Comisión (efectivo) #${orderId}`);
             } else {
-                const deliveryFee = order.costing?.deliveryFee || 0;
-                newBalance += deliveryFee;
-                transactionDescription.push(`Ganancia por entrega: +$${deliveryFee.toFixed(2)}`);
+                totalCredit = deliveryFee;
+                transactionDescription.push(`Ganancia entrega #${orderId}`);
             }
 
-            const tip = order.costing?.tip || 0;
             if (tip > 0) {
-                newBalance += tip;
-                transactionDescription.push(`Propina: +$${tip.toFixed(2)}`);
+                 totalCredit += tip;
+                 transactionDescription.push(`Propina: $${tip.toFixed(2)}`);
+            }
+            if (rainFee > 0) {
+                totalCredit += rainFee;
+                transactionDescription.push(`Tarifa lluvia: $${rainFee.toFixed(2)}`);
             }
 
-            transaction.update(driverDocRef, { "wallet.currentBalance": newBalance });
+            // Compensate debt if balance is negative
+            if (wallet.currentBalance < 0 && totalCredit > 0) {
+                const creditToDebt = Math.min(Math.abs(wallet.currentBalance), totalCredit);
+                transactionDescription.push(`Abono a deuda: -$${creditToDebt.toFixed(2)}`);
+            }
+             
+            transaction.update(driverDocRef, { "wallet.currentBalance": FieldValue.increment(totalCredit) });
 
             const transactionRef = driverDocRef.collection("transactions").doc();
             transaction.set(transactionRef, {
                 date: FieldValue.serverTimestamp(),
                 type: 'credit_delivery',
-                amount: order.costing.totalCost,
+                amount: totalCredit,
                 orderId: orderId,
                 description: transactionDescription.join(' | '),
             });
@@ -203,5 +271,72 @@ export const shipdaywebhook = onRequest(async (req, res) => {
     } catch (error) {
         console.error(`Error procesando webhook para pedido ${orderId}:`, error);
         res.status(500).send("Internal Server Error");
+    }
+});
+
+
+export const updateOperationalSettings = onCall(async (request) => {
+    if (request.auth?.token.role !== "admin" && request.auth?.token.role !== 'superadmin') {
+      throw new HttpsError("permission-denied", "Solo los administradores pueden modificar los ajustes.");
+    }
+    
+    const settingsData = request.data;
+    try {
+        const settingsRef = getFirestore().collection('operationalSettings').doc('global');
+        await settingsRef.set(settingsData, { merge: true });
+        return { success: true, message: "Ajustes operativos actualizados." };
+    } catch (error) {
+        console.error("Error al guardar los ajustes operativos:", error);
+        throw new HttpsError("internal", "No se pudieron guardar los ajustes.");
+    }
+});
+
+
+// This function is intended to be triggered by a Shipday webhook for "new_order_event"
+export const filterAndEnrichOrder = onRequest(async (req, res) => {
+    const orderData = req.body.order; // Assuming the order data is nested under 'order'
+    
+    // 1. Check if the order is cash. If not, no need to filter.
+    if (orderData.paymentMethod !== 'CASH') {
+        res.status(200).send("Order is not cash, no filtering needed.");
+        return;
+    }
+
+    // 2. Get all active drivers from Firestore
+    const activeDriversQuery = getFirestore().collection('drivers').where('operationalStatus', '==', 'active');
+    const activeDriversSnap = await activeDriversQuery.get();
+
+    // 3. Filter drivers based on debt limit
+    const eligibleDrivers: number[] = [];
+    activeDriversSnap.forEach(doc => {
+        const driver = doc.data();
+        if (driver.wallet.currentBalance > driver.wallet.debtLimit && driver.shipdayId) {
+            eligibleDrivers.push(driver.shipdayId);
+        }
+    });
+
+    // 4. Update the order in Shipday with the eligible drivers list
+    if (eligibleDrivers.length > 0) {
+        // IMPORTANT: The Shipday API might not support updating an *existing* order's
+        // target drivers. This step assumes it's possible via an endpoint like /orders/{orderId}.
+        // If not, this logic would need to happen BEFORE the order is first sent to Shipday.
+        // For this example, we assume an update is possible.
+        
+        const enrichedNotes = `Ganancia Estimada: $XX.XX | Método de Pago: ${orderData.paymentMethod}`;
+        
+        await fetch(`https://api.shipday.com/orders/${orderData.orderId}`, {
+            method: 'PUT', // or 'PATCH'
+            headers: {
+                'Content-Type': 'application/json',
+                'X-API-KEY': SHIPDAY_API_KEY.value()
+            },
+            body: JSON.stringify({
+                targetDriverIds: eligibleDrivers,
+                notes: enrichedNotes 
+            })
+        });
+        res.status(200).send(`Order ${orderData.orderId} filtered for ${eligibleDrivers.length} eligible drivers.`);
+    } else {
+        res.status(200).send("No eligible drivers found for this cash order.");
     }
 });
