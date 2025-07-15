@@ -52,11 +52,11 @@ export default function Home() {
           />
           <div className="relative z-10 flex h-full items-center justify-center bg-black/50">
             <div className="container mx-auto px-4 text-center text-white">
-              <h1 className="text-4xl font-extrabold tracking-tight md:text-6xl">
-                Conviértete en un Héroe de la Entrega
+              <h1 className="text-8xl font-extrabold tracking-tighter md:text-9xl">
+                BeFast
               </h1>
               <p className="mt-4 max-w-2xl mx-auto text-lg md:text-xl">
-                Únete a la flota de BeFast y sé tu propio jefe. Genera ingresos increíbles con horarios que tú decides.
+                Sé tu propio jefe. Genera ingresos con horarios que tú decides.
               </p>
               <Button size="lg" className="mt-8 bg-accent hover:bg-accent/90 text-accent-foreground" asChild>
                 <Link href="/register">
