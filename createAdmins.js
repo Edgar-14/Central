@@ -31,21 +31,21 @@ const usersToCreate = [
   }
 ];
 
-const fictitiousDriver = {
-  email: 'repartidor.ficticio@example.com',
-  password: 'password123',
-  fullName: 'Juan Repartidor Ficticio',
-  phone: '555-123-4567',
+const preApprovedDriver = {
+  email: 'ejosgas@gmail.com',
+  password: '1234567a',
+  fullName: 'José Edgar Santos Gaspar',
+  phone: '3121234567',
   personalInfo: {
-    address: 'Calle Falsa 123, Colonia Centro',
-    curp: 'XXXX010101HXXXXX01',
-    rfc: 'XXXX010101XXX',
+    address: 'Av. Siempre Viva 742, Col. Springfield',
+    curp: 'SAGE880808HCSLN01',
+    rfc: 'SAGE880808XXX',
     nss: '12345678901',
   },
   vehicleInfo: {
     type: 'Motocicleta',
     brand: 'Italika FT150',
-    plate: 'XYZ-123',
+    plate: 'JOS-312',
   },
   legal: {
     contractVersion: 'v1.2',
@@ -86,45 +86,45 @@ async function createUsers() {
     }
   }
 
-  console.log('\nCreando repartidor ficticio...');
+  console.log('\nCreando repartidor de prueba pre-aprobado...');
   try {
     const userRecord = await auth.createUser({
-      email: fictitiousDriver.email,
-      password: fictitiousDriver.password,
-      displayName: fictitiousDriver.fullName,
-      phoneNumber: fictitiousDriver.phone,
+      email: preApprovedDriver.email,
+      password: preApprovedDriver.password,
+      displayName: preApprovedDriver.fullName,
+      phoneNumber: preApprovedDriver.phone,
     });
     
     await auth.setCustomUserClaims(userRecord.uid, { role: 'driver' });
-    console.log(`- Cuenta de Auth creada para repartidor ficticio: ${fictitiousDriver.email}`);
+    console.log(`- Cuenta de Auth creada para repartidor de prueba: ${preApprovedDriver.email}`);
     
-    const docRef = db.collection('drivers').doc(fictitiousDriver.email);
+    const docRef = db.collection('drivers').doc(preApprovedDriver.email);
     
     await docRef.set({
       uid: userRecord.uid,
-      email: fictitiousDriver.email,
-      fullName: fictitiousDriver.fullName,
-      phone: fictitiousDriver.phone,
-      personalInfo: fictitiousDriver.personalInfo,
-      vehicleInfo: fictitiousDriver.vehicleInfo,
-      legal: fictitiousDriver.legal,
-      documents: fictitiousDriver.documents,
+      email: preApprovedDriver.email,
+      fullName: preApprovedDriver.fullName,
+      phone: preApprovedDriver.phone,
+      personalInfo: preApprovedDriver.personalInfo,
+      vehicleInfo: preApprovedDriver.vehicleInfo,
+      legal: preApprovedDriver.legal,
+      documents: preApprovedDriver.documents,
       wallet: { currentBalance: 150.75, debtLimit: -500 },
       proStatus: { level: 'Plata', points: 1250 },
       applicationStatus: 'approved',
       operationalStatus: 'active',
-      shipdayId: `fictional_${Math.floor(1000 + Math.random() * 9000)}`,
+      shipdayId: `test_${Math.floor(1000 + Math.random() * 9000)}`,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       applicationSubmittedAt: admin.firestore.FieldValue.serverTimestamp(),
       approvedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
-    console.log(`- Documento de Firestore creado para repartidor ficticio.`);
+    console.log(`- Documento de Firestore creado para repartidor de prueba.`);
 
   } catch (error) {
      if (error.code === 'auth/email-already-exists') {
-        console.log(`- La cuenta para el repartidor ficticio ${fictitiousDriver.email} ya existe.`);
+        console.log(`- La cuenta para el repartidor de prueba ${preApprovedDriver.email} ya existe.`);
      } else {
-        console.error('Error creando repartidor ficticio:', error);
+        console.error('Error creando repartidor de prueba:', error);
      }
   }
 
