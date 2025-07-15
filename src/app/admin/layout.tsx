@@ -1,11 +1,11 @@
+
 'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Bell, Home, Users, FileText, Menu, Settings, LogOut } from 'lucide-react';
+import { Bell, User, Users, FileText, Menu, LogOut, Briefcase } from 'lucide-react';
 import { Logo } from '@/components/shared/logo';
 import {
   DropdownMenu,
@@ -44,6 +44,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 {item.label}
               </Link>
             ))}
+             <Link
+                href="/driver/dashboard"
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+              >
+                <Briefcase className="h-4 w-4" />
+                Portal Repartidor
+              </Link>
           </nav>
           <div className="mt-auto p-4">
              <Link
@@ -80,6 +87,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     {item.label}
                   </Link>
                 ))}
+                 <Link
+                    href="/driver/dashboard"
+                    className="flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+                  >
+                    <Briefcase className="h-5 w-5" />
+                    Portal Repartidor
+                </Link>
               </nav>
                <div className="mt-auto">
                  <Link

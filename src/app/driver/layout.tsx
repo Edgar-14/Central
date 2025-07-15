@@ -1,10 +1,11 @@
+
 'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Bell, User, LifeBuoy, Wallet, Menu, LogOut } from 'lucide-react';
+import { Bell, User, LifeBuoy, Wallet, Menu, LogOut, Shield } from 'lucide-react';
 import { Logo } from '@/components/shared/logo';
 import {
   DropdownMenu,
@@ -44,6 +45,13 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
                 {item.label}
               </Link>
             ))}
+            <Link
+                href="/admin/applications"
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+              >
+                <Shield className="h-4 w-4" />
+                Portal Admin
+            </Link>
           </nav>
            <div className="mt-auto p-4">
              <Link
@@ -80,6 +88,13 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
                     {item.label}
                   </Link>
                 ))}
+                 <Link
+                    href="/admin/applications"
+                    className="flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+                  >
+                    <Shield className="h-5 w-5" />
+                    Portal Admin
+                </Link>
               </nav>
               <div className="mt-auto">
                  <Link
