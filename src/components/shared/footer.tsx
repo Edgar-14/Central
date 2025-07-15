@@ -22,13 +22,13 @@ export function Footer() {
   };
 
   return (
-    <footer className="bg-white/30 dark:bg-black/20 border-t">
+    <footer className="bg-card/60 backdrop-blur-lg border-t mt-auto">
       <div className="container mx-auto px-4 py-12 md:px-6">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-4">
           <div className="lg:col-span-1">
             <Logo />
             <p className="mt-4 text-sm text-muted-foreground">
-              La plataforma central para la gestión de nuestra flota de repartidores.
+              La plataforma para la gestión de nuestra flota de repartidores.
             </p>
             <div className="mt-6 flex gap-4">
               {socialLinks.map(({ name, icon: Icon, href }) => (
@@ -40,14 +40,14 @@ export function Footer() {
             </div>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:col-span-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:col-span-3 gap-8">
             <div>
-              <h3 className="font-semibold">Teléfonos</h3>
+              <h3 className="font-semibold text-foreground">Teléfonos</h3>
               <ul className="mt-4 space-y-2 text-sm">
                 {contactInfo.phones.map(({ label, number }) => (
                   <li key={number}>
                     <a href={`tel:${number.replace(/\s/g, '')}`} className="flex items-center gap-2 text-muted-foreground hover:text-primary">
-                      <Phone className="h-4 w-4" />
+                      <Phone className="h-4 w-4 shrink-0" />
                       <span>{label}: {number}</span>
                     </a>
                   </li>
@@ -55,12 +55,12 @@ export function Footer() {
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold">Correos Electrónicos</h3>
+              <h3 className="font-semibold text-foreground">Correos Electrónicos</h3>
               <ul className="mt-4 space-y-2 text-sm">
                 {contactInfo.emails.map(({ label, address }) => (
                   <li key={address}>
                     <a href={`mailto:${address}`} className="flex items-center gap-2 text-muted-foreground hover:text-primary">
-                      <Mail className="h-4 w-4" />
+                      <Mail className="h-4 w-4 shrink-0" />
                       <span>{label}: {address}</span>
                     </a>
                   </li>
@@ -68,12 +68,12 @@ export function Footer() {
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold">Sitios Web</h3>
+              <h3 className="font-semibold text-foreground">Sitios Web</h3>
               <ul className="mt-4 space-y-2 text-sm">
                 {contactInfo.websites.map(({ label, url }) => (
                   <li key={url}>
                      <a href={`https://${url}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-muted-foreground hover:text-primary">
-                      <Globe className="h-4 w-4" />
+                      <Globe className="h-4 w-4 shrink-0" />
                       <span>{label}</span>
                     </a>
                   </li>

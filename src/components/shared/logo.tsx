@@ -18,7 +18,7 @@ export function Logo({ className, textClassName }: LogoProps) {
         className="rounded-lg"
       />
       <span className={cn("hidden text-lg font-bold text-primary sm:inline-block", textClassName)}>
-        BeFast Central
+        BeFast
       </span>
     </Link>
   );
