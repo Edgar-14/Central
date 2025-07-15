@@ -81,6 +81,13 @@ export default function Home() {
       <main className="flex-1">
         <section className="relative w-full overflow-hidden py-20 md:py-32">
            <div className="absolute inset-0 z-0 bg-background">
+             <Image
+                src="https://firebasestorage.googleapis.com/v0/b/befast-central.appspot.com/o/Fondo-Befast-1.jpg?alt=media"
+                alt="Fondo de repartidor"
+                fill
+                className="object-cover"
+                data-ai-hint="delivery background"
+              />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent"></div>
           </div>
           

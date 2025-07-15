@@ -7,8 +7,10 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900 p-4"
          style={{
+           backgroundImage: `url('https://firebasestorage.googleapis.com/v0/b/befast-central.appspot.com/o/Fondo-Befast-1.jpg?alt=media')`,
            backgroundSize: 'cover',
            backgroundPosition: 'center',
+           backgroundAttachment: 'fixed'
          }}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div className="relative z-10 w-full max-w-md">
