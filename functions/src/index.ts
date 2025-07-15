@@ -4,11 +4,15 @@ import {getFirestore, FieldValue} from "firebase-admin/firestore";
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {onRequest} from "firebase-functions/v2/https";
 import {beforeUserCreated} from "firebase-functions/v2/identity";
+import {defineString} from "firebase-functions/params";
 
 initializeApp();
 
-// 1. beforeUserCreate: Triggered before a new user is created.
-export const setupnewuser = beforeUserCreated(async (event) => {
+const SHIPDAY_API_KEY = defineString("SHIPDAY_API_KEY");
+const SHIPDAY_WEBHOOK_SECRET = defineString("SHIPDAY_WEBHOOK_SECRET");
+
+// 1. beforeUserCreated: Triggered before a new user is created.
+export const setupnewuser = beforeUserCreated((event) => {
   const user = event.data;
   if (!user) {
     throw new HttpsError("internal", "No user data provided for creation.");
@@ -16,7 +20,7 @@ export const setupnewuser = beforeUserCreated(async (event) => {
 
   const driverDocRef = getFirestore().collection("drivers").doc(user.uid);
 
-  await driverDocRef.set({
+  driverDocRef.set({
     uid: user.uid,
     personalInfo: {
       email: user.email || "",
@@ -74,11 +78,46 @@ export const activatedriver = onCall<{driverId: string}>(async (request) => {
         throw new HttpsError("invalid-argument", "La función debe ser llamada con un 'driverId'.");
     }
 
+    const driverDocRef = getFirestore().collection("drivers").doc(driverId);
+    const driverDoc = await driverDocRef.get();
+
+    if (!driverDoc.exists) {
+        throw new HttpsError("not-found", "No se encontró el repartidor.");
+    }
+    const driverData = driverDoc.data();
+
+    // Dynamically import node-fetch
+    const {default: fetch} = await import("node-fetch");
+
+    // Call Shipday API to create driver
+    const shipdayResponse = await fetch("https://api.shipday.com/v1/drivers", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Basic ${SHIPDAY_API_KEY.value()}`
+        },
+        body: JSON.stringify({
+            name: driverData?.personalInfo.fullName,
+            email: driverData?.personalInfo.email,
+            phoneNumber: driverData?.personalInfo.phone,
+        })
+    });
+
+    if (!shipdayResponse.ok) {
+        const errorText = await shipdayResponse.text();
+        throw new HttpsError("internal", `Error al crear el repartidor en Shipday: ${errorText}`);
+    }
+    const shipdayResult = await shipdayResponse.json() as {id: number};
+    const shipdayId = shipdayResult.id;
+
+
+    // Set custom claim for the user
     await getAuth().setCustomUserClaims(driverId, { role: "driver" });
 
-    const driverDocRef = getFirestore().collection("drivers").doc(driverId);
+    // Update the driver's status and shipdayId in Firestore
     await driverDocRef.update({
         operationalStatus: "active",
+        shipdayId: shipdayId
     });
     
     return { success: true, message: "Repartidor activado con éxito." };
@@ -103,9 +142,35 @@ export const rejectapplication = onCall<{driverId: string}>(async (request) => {
     return { success: true, message: "Solicitud rechazada." };
 });
 
-// 5. shipdayWebhook: Receives order updates from Shipday to update driver wallets.
+// 5. suspendDriver & restrictDriver
+export const suspenddriver = onCall<{driverId: string}>(async (request) => {
+    if (request.auth?.token.role !== "admin" && request.auth?.token.role !== 'superadmin') {
+        throw new HttpsError("permission-denied", "Solo los administradores pueden suspender repartidores.");
+    }
+    const { driverId } = request.data;
+    await getFirestore().collection("drivers").doc(driverId).update({ operationalStatus: "suspended" });
+    return { success: true, message: "Repartidor suspendido." };
+});
+
+export const restrictdriver = onCall<{driverId: string}>(async (request) => {
+    if (request.auth?.token.role !== "admin" && request.auth?.token.role !== 'superadmin') {
+        throw new HttpsError("permission-denied", "Solo los administradores pueden restringir repartidores.");
+    }
+    const { driverId } = request.data;
+    await getFirestore().collection("drivers").doc(driverId).update({ operationalStatus: "restricted_debt" });
+    return { success: true, message: "Repartidor restringido por deuda." };
+});
+
+
+// 6. shipdayWebhook: Receives order updates from Shipday to update driver wallets.
 export const shipdaywebhook = onRequest(async (req, res) => {
-  // TODO: Add a secret to verify that the request is coming from Shipday.
+  const secret = req.headers['x-shipday-secret'];
+  if (secret !== SHIPDAY_WEBHOOK_SECRET.value()) {
+      console.warn("Recibida solicitud de webhook no autorizada.");
+      res.status(401).send("Unauthorized");
+      return;
+  }
+  
   const { orderId, driverId, eventType, order } = req.body;
 
   if (!driverId || !orderId || !eventType) {

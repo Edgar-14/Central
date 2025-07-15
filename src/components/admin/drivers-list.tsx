@@ -3,24 +3,34 @@
 import { useState, useEffect } from 'react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, User, ShieldCheck } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Loader2, User, ShieldCheck, MoreVertical, Ban, UserX } from 'lucide-react';
 import type { Driver } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useToast } from '@/hooks/use-toast';
+
+const functions = getFunctions();
+const suspendDriver = httpsCallable(functions, 'suspenddriver');
+const restrictDriver = httpsCallable(functions, 'restrictdriver');
 
 export function DriversList() {
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchActiveDrivers = async () => {
+  const fetchActiveDrivers = async () => {
+      setIsLoading(true);
       try {
         const driversQuery = query(
           collection(db, 'drivers'),
-          where('operationalStatus', '==', 'active')
+          where('operationalStatus', 'in', ['active', 'restricted_debt', 'suspended'])
         );
         const querySnapshot = await getDocs(driversQuery);
         const activeDrivers = querySnapshot.docs.map(doc => doc.data() as Driver);
@@ -33,8 +43,37 @@ export function DriversList() {
       }
     };
 
+  useEffect(() => {
     fetchActiveDrivers();
   }, []);
+  
+  const handleDriverAction = async (action: 'suspend' | 'restrict', driverId: string, driverName: string) => {
+    setIsProcessing(driverId);
+    try {
+        let response;
+        if (action === 'suspend') {
+            response = await suspendDriver({ driverId });
+        } else {
+            response = await restrictDriver({ driverId });
+        }
+        toast({
+            title: 'Acción completada',
+            description: `${driverName} ha sido ${action === 'suspend' ? 'suspendido' : 'restringido'}.`,
+        });
+        // Refresh list after action
+        fetchActiveDrivers();
+    } catch (err) {
+        console.error(`Failed to ${action} driver:`, err);
+        toast({
+            title: 'Error',
+            description: `No se pudo completar la acción para ${driverName}.`,
+            variant: 'destructive'
+        });
+    } finally {
+        setIsProcessing(null);
+    }
+  }
+
 
   if (isLoading) {
     return (
@@ -65,8 +104,9 @@ export function DriversList() {
             <TableRow>
               <TableHead>Nombre</TableHead>
               <TableHead>Contacto</TableHead>
-              <TableHead>Estatus Pro</TableHead>
+              <TableHead>Estatus Operativo</TableHead>
               <TableHead className="text-right">Saldo</TableHead>
+              <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -76,17 +116,42 @@ export function DriversList() {
                   <TableCell className="font-medium">{driver.personalInfo.fullName}</TableCell>
                   <TableCell>{driver.personalInfo.email}</TableCell>
                   <TableCell>
-                    <Badge variant="secondary">{driver.proStatus.level}</Badge>
+                    <Badge variant={
+                        driver.operationalStatus === 'active' ? 'default' 
+                        : driver.operationalStatus === 'suspended' ? 'secondary' 
+                        : 'destructive'
+                    }>
+                        {driver.operationalStatus}
+                    </Badge>
                   </TableCell>
                   <TableCell className={`text-right font-medium ${driver.wallet.currentBalance < 0 ? 'text-destructive' : ''}`}>
                     {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(driver.wallet.currentBalance)}
                   </TableCell>
+                   <TableCell className="text-right">
+                     <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" disabled={isProcessing === driver.uid}>
+                                {isProcessing === driver.uid ? <Loader2 className="h-4 w-4 animate-spin" /> : <MoreVertical className="h-4 w-4" />}
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                            <DropdownMenuItem onClick={() => handleDriverAction('restrict', driver.uid, driver.personalInfo.fullName)}>
+                                <Ban className="mr-2 h-4 w-4" />
+                                Restringir por Deuda
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDriverAction('suspend', driver.uid, driver.personalInfo.fullName)} className="text-destructive">
+                                <UserX className="mr-2 h-4 w-4" />
+                                Suspender Cuenta
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                     </DropdownMenu>
+                   </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={4} className="text-center text-muted-foreground">
-                  No hay repartidores activos en este momento.
+                <TableCell colSpan={5} className="text-center text-muted-foreground">
+                  No hay repartidores para mostrar.
                 </TableCell>
               </TableRow>
             )}

@@ -5,7 +5,7 @@ import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -132,7 +132,7 @@ export function RegistrationForm() {
     if(currentStep !== 5) return; // Only submit on the last step
     setIsLoading(true);
     try {
-      // 1. Create user in Firebase Auth (triggers onUserCreate)
+      // 1. Create user in Firebase Auth (triggers setupnewuser)
       const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
       const user = userCredential.user;
 
@@ -257,15 +257,24 @@ export function RegistrationForm() {
             <div className="space-y-6">
               <h3 className="text-xl font-semibold">3. Contratación y Acuerdos Legales</h3>
               <Card>
-                <CardContent className="p-4 max-h-60 overflow-y-auto border rounded-md">
-                  <h4 className="font-bold">Contrato Individual de Trabajo</h4>
-                  <p className="text-sm text-muted-foreground">Aquí se mostraría el contenido completo del PDF del contrato y sus anexos...</p>
+                <CardHeader>
+                  <CardTitle>Contrato Individual de Trabajo</CardTitle>
+                  <CardDescription>Revisa el contrato y sus anexos. Al continuar, aceptas los términos.</CardDescription>
+                </CardHeader>
+                <CardContent className="p-2">
+                  <div className="w-full h-96 border rounded-md">
+                    <iframe 
+                      src="https://firebasestorage.googleapis.com/v0/b/befast-central.appspot.com/o/legal%2FContrato-BeFast-Repartidor-Ejemplo.pdf?alt=media&token=e9e6a9a4-6b21-4d38-8e6e-21e3c83b8b05" 
+                      className="w-full h-full"
+                      title="Contrato de Repartidor"
+                    />
+                  </div>
                 </CardContent>
               </Card>
               <FormField name="acceptContract" render={({ field }) => (
                 <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                   <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                  <div className="space-y-1 leading-none"><FormLabel>He leído, comprendido y acepto en su totalidad el Contrato Individual de Trabajo y sus cuatro anexos.</FormLabel><FormMessage /></div>
+                  <div className="space-y-1 leading-none"><FormLabel>He leído, comprendido y acepto en su totalidad el Contrato Individual de Trabajo y sus anexos.</FormLabel><FormMessage /></div>
                 </FormItem>
               )} />
               <FormField name="acceptSignature" render={({ field }) => (
