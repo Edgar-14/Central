@@ -15,6 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { ThemeToggle } from '@/components/shared/theme-toggle';
 
 const navItems = [
   { href: '/driver/dashboard', icon: Wallet, label: 'Mi Billetera' },
@@ -108,6 +109,7 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
             </SheetContent>
           </Sheet>
           <div className="w-full flex-1" />
+          <ThemeToggle />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="icon" className="rounded-full">

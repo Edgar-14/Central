@@ -212,7 +212,7 @@ export function RegistrationForm() {
               <p className="text-muted-foreground max-w-lg mx-auto">
                 Has completado todos los pasos. Revisa tu información si es necesario, o haz clic en "Enviar Solicitud" para finalizar tu postulación.
               </p>
-              <Button type="submit" size="lg" disabled={isLoading} className="bg-accent hover:bg-accent/90">
+              <Button type="submit" size="lg" disabled={isLoading} className="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-accent-foreground">
                 {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Send className="mr-2 h-5 w-5" />}
                 {isLoading ? 'Enviando...' : 'Enviar Solicitud'}
               </Button>

@@ -6,6 +6,7 @@ import { Footer } from '@/components/shared/footer';
 import { Logo } from '@/components/shared/logo';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import Image from 'next/image';
+import { ThemeToggle } from '@/components/shared/theme-toggle';
 
 export default function Home() {
   const benefits = [
@@ -34,16 +35,19 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-background/80 backdrop-blur-lg">
+      <header className="sticky top-0 z-50 w-full border-b border-border/10 bg-background/80 backdrop-blur-lg">
         <div className="container mx-auto flex h-20 items-center justify-between px-4 md:px-6">
           <Logo />
           <nav className="hidden items-center gap-6 md:flex">
-            <Link href="#benefits" className="text-sm font-medium text-gray-300 transition-colors hover:text-white">Beneficios</Link>
-            <Link href="#requirements" className="text-sm font-medium text-gray-300 transition-colors hover:text-white">Requisitos</Link>
+            <Link href="#benefits" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Beneficios</Link>
+            <Link href="#requirements" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">Requisitos</Link>
           </nav>
-          <Button asChild variant="secondary">
-            <Link href="/login">Iniciar Sesión</Link>
-          </Button>
+          <div className="flex items-center gap-4">
+            <ThemeToggle />
+            <Button asChild variant="secondary">
+              <Link href="/login">Iniciar Sesión</Link>
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -63,13 +67,13 @@ export default function Home() {
           
           <div className="relative z-10 flex min-h-[calc(100vh-5rem)] items-center">
             <div className="container mx-auto px-4 text-center">
-              <h1 className="text-6xl font-extrabold tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-white to-blue-300 sm:text-7xl md:text-9xl">
+              <h1 className="text-6xl font-extrabold tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-foreground to-foreground/70 sm:text-7xl md:text-9xl">
                 BeFast
               </h1>
-              <p className="mt-4 max-w-2xl mx-auto text-lg text-gray-300 md:text-xl">
+              <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground md:text-xl">
                 Sé tu propio jefe. Genera ingresos con horarios que tú decides.
               </p>
-              <Button size="lg" className="mt-8 bg-accent hover:bg-accent/90 text-accent-foreground group" asChild>
+              <Button size="lg" className="mt-8 bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-accent-foreground group" asChild>
                 <Link href="/register">
                   Inicia tu Registro Ahora
                   <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
@@ -100,7 +104,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="requirements" className="py-16 md:py-24">
+        <section id="requirements" className="py-16 md:py-24 bg-muted/40">
            <div className="container mx-auto px-4 md:px-6">
                 <div className="grid lg:grid-cols-2 gap-12 items-center">
                     <Carousel className="w-full h-96 lg:h-full rounded-2xl overflow-hidden group">

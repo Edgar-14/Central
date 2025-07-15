@@ -15,6 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { ThemeToggle } from '@/components/shared/theme-toggle';
 
 const navItems = [
   { href: '/admin/applications', icon: FileText, label: 'Solicitudes' },
@@ -109,6 +110,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="w-full flex-1">
             {/* Can add a search bar here if needed */}
           </div>
+          <ThemeToggle />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="icon" className="rounded-full">
