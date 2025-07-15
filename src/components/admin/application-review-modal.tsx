@@ -67,7 +67,7 @@ export function ApplicationReviewModal({ driver, isOpen, onClose }: ApplicationR
         <DialogHeader>
           <DialogTitle>Revisión de Solicitud</DialogTitle>
           <DialogDescription>
-            {driver.personalInfo.fullName} - {driver.personalInfo.email}
+            Revisa los detalles y documentos del aspirante para tomar una decisión.
           </DialogDescription>
         </DialogHeader>
         <div className="flex-1 overflow-y-auto pr-4">
@@ -75,6 +75,8 @@ export function ApplicationReviewModal({ driver, isOpen, onClose }: ApplicationR
             <Card>
               <CardHeader><CardTitle className="text-lg">Información Personal</CardTitle></CardHeader>
               <CardContent className="text-sm space-y-2">
+                <p><strong>Nombre:</strong> {driver.personalInfo.fullName}</p>
+                <p><strong>Email:</strong> {driver.personalInfo.email}</p>
                 <p><strong>Teléfono:</strong> {driver.personalInfo.phone}</p>
                 <p><strong>Dirección:</strong> {driver.personalInfo.address}</p>
                 <p><strong>CURP:</strong> {driver.personalInfo.curp}</p>

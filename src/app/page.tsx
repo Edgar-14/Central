@@ -79,7 +79,7 @@ export default function Home() {
       </header>
 
       <main className="flex-1">
-        <section className="relative w-full overflow-hidden">
+        <section className="relative w-full overflow-hidden py-20 md:py-32">
           <div className="absolute inset-0 z-0">
             <Image
               src="https://i.ibb.co/RpQSDZJ/226A1568.jpg"
@@ -93,7 +93,7 @@ export default function Home() {
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent"></div>
           </div>
           
-          <div className="relative z-10 flex min-h-[calc(100vh-5rem)] items-center">
+          <div className="relative z-10">
             <div className="container mx-auto px-4 text-center">
               <h1 className="text-6xl font-extrabold tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-foreground to-foreground/70 sm:text-7xl md:text-9xl">
                 BeFast

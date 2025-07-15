@@ -5,14 +5,12 @@ import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {onRequest} from "firebase-functions/v2/https";
 import {beforeUserCreated} from "firebase-functions/v2/identity";
 import {defineString} from "firebase-functions/params";
-import createShipday from 'shipday';
+import fetch from "node-fetch";
 
 initializeApp();
 
 const SHIPDAY_API_KEY = defineString("SHIPDAY_API_KEY");
 const SHIPDAY_WEBHOOK_SECRET = defineString("SHIPDAY_WEBHOOK_SECRET");
-
-const shipday = createShipday(SHIPDAY_API_KEY.value());
 
 // 1. beforeUserCreate: Triggered before a new user is created.
 export const setupnewuser = beforeUserCreated((event) => {
@@ -23,7 +21,7 @@ export const setupnewuser = beforeUserCreated((event) => {
 
   const driverDocRef = getFirestore().collection("drivers").doc(user.uid);
 
-  return driverDocRef.set({
+  driverDocRef.set({
     uid: user.uid,
     personalInfo: {
       email: user.email || "",
@@ -89,16 +87,25 @@ export const activatedriver = onCall<{driverId: string}>(async (request) => {
     }
     const driverData = driverDoc.data();
 
-    const shipdayResult = await shipday.driverService.addDriver({
-        name: driverData?.personalInfo.fullName,
-        email: driverData?.personalInfo.email,
-        phoneNumber: driverData?.personalInfo.phone,
+    // Call Shipday API to create driver
+    const shipdayResponse = await fetch("https://api.shipday.com/driver/add", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Basic ${SHIPDAY_API_KEY.value()}`
+        },
+        body: JSON.stringify({
+            name: driverData?.personalInfo.fullName,
+            email: driverData?.personalInfo.email,
+            phoneNumber: driverData?.personalInfo.phone,
+        })
     });
-    
-    if (!shipdayResult.success) {
-        throw new HttpsError("internal", `Error al crear el repartidor en Shipday: ${shipdayResult.errorMessage}`);
+
+    if (!shipdayResponse.ok) {
+        const errorText = await shipdayResponse.text();
+        throw new HttpsError("internal", `Error al crear el repartidor en Shipday: ${errorText}`);
     }
-    
+    const shipdayResult = await shipdayResponse.json() as {id: number};
     const shipdayId = shipdayResult.id;
 
 
@@ -152,8 +159,56 @@ export const restrictdriver = onCall<{driverId: string}>(async (request) => {
     return { success: true, message: "Repartidor restringido por deuda." };
 });
 
+// 6. processNewOrder: The pre-filtering algorithm
+export const processneworder = onRequest(async (req, res) => {
+    // 1. Receive new order
+    const orderData = req.body;
+    const { paymentMethod } = orderData; // 'cash' or 'card'
 
-// 6. shipdayWebhook: Receives order updates from Shipday to update driver wallets.
+    // 2. Get available drivers from Shipday
+    const availableDriversResponse = await fetch("https://api.shipday.com/v1/drivers/list", {
+        method: 'GET',
+        headers: { 'Authorization': `Basic ${SHIPDAY_API_KEY.value()}` }
+    });
+    const availableDrivers = (await availableDriversResponse.json()).drivers;
+
+    // 3. Get driver data from Firestore
+    const driverIds = availableDrivers.map((d: any) => d.id.toString());
+    const driverDocs = await getFirestore().collection('drivers').where('shipdayId', 'in', driverIds).get();
+
+    // 4. Apply business logic
+    const eligibleDriverIds = [];
+    for (const doc of driverDocs.docs) {
+        const driver = doc.data();
+        if (driver.operationalStatus !== 'active') {
+            continue;
+        }
+        if (paymentMethod === 'cash' && driver.wallet.currentBalance <= driver.wallet.debtLimit) {
+            continue;
+        }
+        eligibleDriverIds.push(driver.shipdayId);
+    }
+
+    // 5. Dispatch order to Shipday with eligible drivers
+    await fetch("https://api.shipday.com/v1/orders", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Basic ${SHIPDAY_API_KEY.value()}`
+        },
+        body: JSON.stringify({
+            ...orderData,
+            targetDriverIds: eligibleDriverIds,
+            // Add extra info for the driver
+            notes: `Ganancia Estimada: $XX.XX | Método de Pago: ${paymentMethod}`
+        })
+    });
+
+    res.status(200).send("Order processed and dispatched.");
+});
+
+
+// 7. shipdayWebhook: Receives order updates from Shipday to update driver wallets.
 export const shipdaywebhook = onRequest(async (req, res) => {
   const secret = req.headers['x-shipday-secret'];
   if (secret !== SHIPDAY_WEBHOOK_SECRET.value()) {

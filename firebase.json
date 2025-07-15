@@ -7,12 +7,15 @@
     "runtime": "nodejs22"
   },
   "hosting": {
-    "public": "out",
+    "source": ".",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
-    ]
+    ],
+    "frameworksBackend": {
+      "region": "us-central1"
+    }
   },
   "apphosting": {
     "backendId": "repas",

@@ -52,7 +52,7 @@ export function LoginForm() {
             title: 'Inicio de Sesión Exitoso',
             description: 'Bienvenido, Administrador.',
         });
-        router.push('/admin/applications');
+        router.push('/admin/dashboard');
       } else if (role === 'driver') {
          toast({
             title: 'Inicio de Sesión Exitoso',
