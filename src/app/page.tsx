@@ -1,4 +1,3 @@
-
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -49,24 +48,16 @@ export default function Home() {
   ];
 
   const sliderImages = [
-    { src: "https://i.ibb.co/rGNs3g4/IMG-9924.jpg", alt: "Driver with food", hint: "delivery food" },
-    { src: "https://i.ibb.co/fML25pP/226-A1559.jpg", alt: "BeFast delivery driver", hint: "delivery person" },
-    { src: "https://i.ibb.co/y4YmP1q/226-A1568.jpg", alt: "Restaurant kitchen", hint: "restaurant kitchen" },
-    { src: "https://i.ibb.co/B2vLx9J/226-A1608.jpg", alt: "Person driving car", hint: "driving car" },
-    { src: "https://i.ibb.co/WcZ4Y9d/226-A1612.jpg", alt: "Driver with helmet", hint: "motorcycle helmet" },
-    { src: "https://i.ibb.co/1K57f1p/226-A1614.jpg", alt: "Driver smiling", hint: "smiling person" },
-    { src: "https://i.ibb.co/F8bVj4h/226-A1621.jpg", alt: "Driver on motorcycle", hint: "motorcycle delivery" },
-    { src: "https://i.ibb.co/K2s2L0f/226-A1629.jpg", alt: "Driver at night", hint: "delivery night" },
-    { src: "https://i.ibb.co/yQ5D6sJ/226-A1658.jpg", alt: "Restaurant food pickup", hint: "food pickup" },
-    { src: "https://i.ibb.co/gPSczqn/226-A1697.jpg", alt: "City street", hint: "city street" },
-    { src: "https://i.ibb.co/sJytMzT/226-A1730.jpg", alt: "Motorcycle on street", hint: "motorcycle city" },
-    { src: "https://i.ibb.co/v4d7KjB/226-A1753.jpg", alt: "Building exterior", hint: "store front" },
-    { src: "https://i.ibb.co/51bXb0y/IMG-0007.jpg", alt: "Food preparation", hint: "food prep" },
-    { src: "https://i.ibb.co/68vL512/IMG-0010.jpg", alt: "Prepared dish", hint: "prepared dish" },
-    { src: "https://i.ibb.co/VvZg1Hz/IMG-9917.jpg", alt: "Delivery bag", hint: "delivery bag" },
-    { src: "https://i.ibb.co/VjxtqM8/IMG-9918.jpg", alt: "Driver with delivery", hint: "happy driver" },
-    { src: "https://i.ibb.co/cQZ0hht/IMG-9922.jpg", alt: "Driver on phone", hint: "driver phone" },
-    { src: "https://i.ibb.co/Vp8p2hT/IMG-9958.jpg", alt: "Food packaging", hint: "food packaging" },
+    { src: "https://i.ibb.co/GQ09Wf7/226A1559.jpg", alt: "BeFast delivery driver" },
+    { src: "https://i.ibb.co/RpQSDZJ/226A1568.jpg", alt: "Restaurant kitchen" },
+    { src: "https://i.ibb.co/MrNdzc3/226A1953.jpg", alt: "Person driving car" },
+    { src: "https://i.ibb.co/1Gwk2DGs/226A1904.jpg", alt: "Driver with helmet" },
+    { src: "https://i.ibb.co/rKK9rVd/226A1715.jpg", alt: "Driver smiling" },
+    { src: "https://i.ibb.co/HLRmsn5/IMG-9924.jpg", alt: "Driver with delivery" },
+    { src: "https://i.ibb.co/XxYpq8m/IMG-9899.jpg", alt: "Food preparation" },
+    { src: "https://i.ibb.co/kg38Ksr/IMG-9827.jpg", alt: "Prepared dish" },
+    { src: "https://i.ibb.co/Rxh9yTT/IMG-9823.jpg", alt: "Delivery bag" },
+    { src: "https://i.ibb.co/SDP42mS/IMG-9831.jpg", alt: "Food packaging" },
   ];
 
   return (
@@ -91,14 +82,13 @@ export default function Home() {
         <section className="relative w-full overflow-hidden">
           <div className="absolute inset-0 z-0">
             <Image
-              src="https://i.ibb.co/QjFqVfX/226-A1629.jpg"
+              src="https://i.ibb.co/RpQSDZJ/226A1568.jpg"
               alt="BeFast delivery driver"
               fill
               priority
               sizes="100vw"
               style={{ objectFit: 'cover' }}
               className="opacity-20"
-              data-ai-hint="delivery person night"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent"></div>
           </div>
@@ -158,7 +148,6 @@ export default function Home() {
                                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                   style={{ objectFit: 'cover' }}
                                   className="transition-transform duration-500 hover:scale-110"
-                                  data-ai-hint={image.hint}
                               />
                               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
                             </div>

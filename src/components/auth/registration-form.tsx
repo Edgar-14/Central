@@ -1,32 +1,33 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { Loader2, UploadCloud, FileText, Video, Award, Send } from 'lucide-react';
+import { Loader2, UploadCloud, FileText, Video, Award, Send, CheckCircle } from 'lucide-react';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth, storage } from '@/lib/firebase';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { cn } from '@/lib/utils';
 
 const functions = getFunctions();
 const submitApplication = httpsCallable(functions, 'submitapplication');
 
 const steps = [
-  { id: 1, name: 'Cuenta y Datos Personales', icon: FileText },
-  { id: 2, name: 'Carga de Documentos', icon: UploadCloud },
-  { id: 3, name: 'Contratación y Acuerdos', icon: FileText },
+  { id: 1, name: 'Cuenta y Datos', icon: FileText },
+  { id: 2, name: 'Documentos', icon: UploadCloud },
+  { id: 3, name: 'Legal', icon: FileText },
   { id: 4, name: 'Capacitación', icon: Video },
-  { id: 5, name: 'Envío Final', icon: Award },
+  { id: 5, name: 'Envío', icon: Award },
 ];
 
 const fileSchema = z.any().refine(file => file instanceof File, 'Se requiere un archivo.');
@@ -69,12 +70,23 @@ const documents = [
   { name: 'Póliza de Seguro Vehicular', id: 'insuranceUrl' as const },
 ];
 
+const trainingModules = [
+    { id: 'module1', title: 'Introducción a BeFast y Nuestra App', duration: '5 min' },
+    { id: 'module2', title: 'Manejo de Pedidos y Tiempos de Entrega', duration: '10 min' },
+    { id: 'module3', title: 'Protocolos de Seguridad y Emergencias', duration: '8 min' },
+    { id: 'module4', title: 'Uso de la Billetera y Sistema de Pagos', duration: '7 min' },
+    { id: 'module5', title: 'Cuestionario de Evaluación Final', duration: '15 min' },
+]
 
 export function RegistrationForm() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [completedModules, setCompletedModules] = useState<Set<string>>(new Set());
   const { toast } = useToast();
   const router = useRouter();
+
+  const allModulesCompleted = useMemo(() => completedModules.size === trainingModules.length, [completedModules]);
+
 
   const methods = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -109,7 +121,16 @@ export function RegistrationForm() {
     }
 
     const isValid = await methods.trigger(fieldsToValidate);
+    
     if (isValid) {
+       if (currentStep === 4 && !allModulesCompleted) {
+            toast({
+                title: "Capacitación Incompleta",
+                description: "Por favor, marca todos los módulos como completados para continuar.",
+                variant: "destructive"
+            });
+            return;
+       }
       if (currentStep < steps.length) {
         setCurrentStep(currentStep + 1);
       }
@@ -122,6 +143,18 @@ export function RegistrationForm() {
     }
   };
   
+  const toggleModuleCompletion = (moduleId: string) => {
+    setCompletedModules(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(moduleId)) {
+            newSet.delete(moduleId);
+        } else {
+            newSet.add(moduleId);
+        }
+        return newSet;
+    });
+  }
+
   const uploadFile = async (file: File, path: string): Promise<string> => {
     const storageRef = ref(storage, path);
     await uploadBytes(storageRef, file);
@@ -194,13 +227,13 @@ export function RegistrationForm() {
       <div className="space-y-8">
         <div>
           <Progress value={progress} className="h-2" />
-          <div className="mt-4 grid grid-cols-5 gap-x-2 text-sm">
+          <div className="mt-4 grid grid-cols-5 gap-x-2">
             {steps.map(step => (
               <div key={step.id} className="text-center">
-                <div className={`mx-auto flex h-8 w-8 items-center justify-center rounded-full ${step.id <= currentStep ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                <div className={cn("mx-auto flex h-8 w-8 items-center justify-center rounded-full", step.id <= currentStep ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground')}>
                   <step.icon className="h-5 w-5" />
                 </div>
-                <p className={`mt-2 font-medium ${step.id <= currentStep ? 'text-primary' : 'text-muted-foreground'}`}>{step.name}</p>
+                <p className={cn("mt-2 font-medium text-xs hidden md:block", step.id <= currentStep ? 'text-primary' : 'text-muted-foreground')}>{step.name}</p>
               </div>
             ))}
           </div>
@@ -227,7 +260,7 @@ export function RegistrationForm() {
           {currentStep === 2 && (
             <div>
               <h3 className="text-xl font-semibold">2. Carga de Documentos</h3>
-              <p className="text-muted-foreground mb-6">Sube cada documento en formato PDF o JPG. Esta función se conectará a Cloud Storage.</p>
+              <p className="text-muted-foreground mb-6">Sube cada documento en formato PDF o JPG.</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {documents.map(doc => (
                   <FormField
@@ -290,18 +323,40 @@ export function RegistrationForm() {
           )}
           
           {currentStep === 4 && (
-            <div className="text-center space-y-6">
-              <h3 className="text-xl font-semibold">4. Capacitación Obligatoria</h3>
-              <p className="text-muted-foreground">Completa los 5 módulos y aprueba el cuestionario para continuar.</p>
-              <div className="p-8 border rounded-lg bg-muted/50">
-                  <h4 className="text-2xl font-bold text-primary">Contenido de Capacitación</h4>
-                  <p className="mt-2">Aquí se incrustarían videos, presentaciones y texto.</p>
-              </div>
-              <Button asChild size="lg" className="bg-green-600 hover:bg-green-700">
-                <a href="https://forms.google.com" target="_blank" rel="noopener noreferrer">
-                  Ir al Cuestionario de Evaluación
-                </a>
-              </Button>
+             <div className="space-y-6">
+                <h3 className="text-xl font-semibold">4. Capacitación Obligatoria</h3>
+                <p className="text-muted-foreground">Marca cada módulo como completado para poder continuar.</p>
+                <div className="space-y-3">
+                    {trainingModules.map((module, index) => (
+                        <Card key={module.id} className={cn("transition-all", completedModules.has(module.id) && "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800")}>
+                            <CardContent className="p-4 flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className={cn("h-10 w-10 rounded-full flex items-center justify-center font-bold text-lg", completedModules.has(module.id) ? "bg-green-600 text-white" : "bg-muted")}>
+                                        {completedModules.has(module.id) ? <CheckCircle /> : index + 1}
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold">{module.title}</p>
+                                        <p className="text-sm text-muted-foreground">{module.duration}</p>
+                                    </div>
+                                </div>
+                                <Checkbox 
+                                    className="h-6 w-6"
+                                    checked={completedModules.has(module.id)}
+                                    onCheckedChange={() => toggleModuleCompletion(module.id)}
+                                />
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
+                {allModulesCompleted && (
+                    <Alert variant="default" className="border-green-500 bg-green-50 dark:bg-green-900/20">
+                        <CheckCircle className="h-4 w-4 !text-green-600" />
+                        <AlertTitle className="text-green-700 dark:text-green-400">¡Capacitación Completa!</AlertTitle>
+                        <AlertDescription className="text-green-600 dark:text-green-500">
+                            Has completado todos los módulos. Ya puedes pasar al último paso.
+                        </AlertDescription>
+                    </Alert>
+                )}
             </div>
           )}
 

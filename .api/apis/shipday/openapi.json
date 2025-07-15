@@ -1,0 +1,1519 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "orders",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.shipday.com"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "sec0": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key"
+      }
+    }
+  },
+  "security": [
+    {
+      "sec0": []
+    }
+  ],
+  "paths": {
+    "/orders": {
+      "get": {
+        "summary": "Retrieve Active Orders",
+        "description": "",
+        "operationId": "retrieve-active-orders",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "Replace the BgxsDwd00n.LNNn90QydrjgZ1K9dS13 part with your own API_KEY from Shipday for authentication.",
+            "schema": {
+              "type": "string",
+              "default": "Basic BgxsDwd00n.LNNn90QydrjgZ1K9dS13"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "[\n  {\n    \"orderId\": 22773,\n    \"orderNumber\": \"75637\",\n    \"companyId\": 409,\n    \"areaId\": 406,\n    \"customer\": {\n      \"name\": \"Isabella\",\n      \"address\": \"Crespi Dr, Pacifica, CA 94044, USA\",\n      \"phoneNumber\": \"+8801555552505\",\n      \"emailAddress\": \"isabella@ymail.com\",\n      \"latitude\": 23.810332,\n      \"longitude\": 90.4125181\n    },\n    \"restaurant\": {\n      \"id\": 1232332,\n      \"name\": \"Kenny's Cafe\",\n      \"address\": \"640 Crespi Dr #1, Pacifica, CA 94044, United States\",\n      \"phoneNumber\": \"+16507388777\",\n      \"latitude\": 23.8069245,\n      \"longitude\": 90.36869779999999\n    },\n    \"assignedCarrier\": {\n      \"id\": 30309,\n      \"personalId\": null,\n      \"name\": \"Jennifer\",\n      \"codeName\": null,\n      \"phoneNumber\": \"+1234234233\",\n      \"companyId\": null,\n      \"areaId\": null,\n      \"isOnShift\": true,\n      \"email\": \"jennifer1234@gmail.com\",\n      \"carrierPhoto\": \"https://s3-us-west-2.amazonaws.com/qt.com.dashboard.profile.driver/somelinktothecarrier.jpg\",\n      \"isActive\": true,\n    },\n    \"distance\": 0.6443,\n    \"activityLog\": {\n      \"placementTime\": \"2019-12-07T05:48:05\",\n      \"expectedPickupTime\": \"06:15\",\n      \"expectedDeliveryDate\": \"2019-12-07\",\n      \"expectedDeliveryTime\": \"06:45\",\n      \"assignedTime\": null,\n      \"startTime\": null,\n      \"pickedUpTime\": null,\n      \"arrivedTime\": null,\n      \"deliveryTime\": null\n    },\n    \"costing\": {\n      \"totalCost\": 19.55,\n      \"deliveryFee\": 2,\n      \"tip\": 0,\n      \"discountAmount\": 0,\n      \"tax\": 1.55,\n      \"cashTip\": 0\n    },\n    \"paymentMethod\": \"CASH\",\n    \"orderItems\": null,\n    \"assignedCarrierId\": null,\n    \"orderStatus\": {\n      \"incomplete\": true,\n      \"accepted\": false,\n      \"orderState\": \"INCOMPLETE\"\n    },\n    \"trackingLink\": null,\n    \"feedback\": null,\n    \"schedule\": false,\n    \"parentId\": 0,\n    \"etaTime\": \"\",\n    \"deliveryInstruction\": \"Ring the bell twice\"\n  }\n]"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false,
+        "x-readme": {
+          "code-samples": [
+            {
+              "language": "curl",
+              "code": "curl --request GET \\\n     --url https://api.shipday.com/orders \\\n     --header 'Accept: application/json' \\\n     --header 'Authorization: Basic BgxsDwd00n.LNNn90QydrjgZ1K9dS13' \\\n     --header 'x-api-key: null'"
+            },
+            {
+              "language": "javascript",
+              "code": "const shipday = require(\"shipday/integration\");\n\nconst shipdayClient = new shipday('BgxsDwd00n.LNNn90Qydr', 55800);\n\nshipdayClient.orderService.getOrders()\n  .then(r => console.log(r))\n  .catch(e => console.log(e.message));\n\n\n\n",
+              "name": "Shipday SDK"
+            },
+            {
+              "language": "python",
+              "code": "#install shipday with 'pip install shipday'\n\nfrom shipday import Shipday\n\nAPI_KEY = '##########.#######################'\nshipday_obj = Shipday(api_key=API_KEY)\nmy_orders = shipday_obj.OrderService.get_orders()\n\n\n",
+              "name": "Shipday SDK"
+            }
+          ],
+          "samples-languages": [
+            "curl",
+            "javascript",
+            "python"
+          ]
+        }
+      },
+      "post": {
+        "summary": "Insert Order",
+        "description": "",
+        "operationId": "insert-delivery-order",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "Replace the BgxsDwd00n.LNNn90QydrjgZ1K9dS13 part with your own API_KEY from Shipday for authentication.",
+            "schema": {
+              "type": "string",
+              "default": "Basic BgxsDwd00n.LNNn90QydrjgZ1K9dS13"
+            }
+          },
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "application/json"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "orderNumber",
+                  "customerName",
+                  "customerAddress",
+                  "customerPhoneNumber",
+                  "restaurantName",
+                  "restaurantAddress"
+                ],
+                "properties": {
+                  "orderNumber": {
+                    "type": "string",
+                    "description": "Alphanumeric identifier for the order object",
+                    "default": "99qT5A"
+                  },
+                  "customerName": {
+                    "type": "string",
+                    "description": "The name of the customer",
+                    "default": "Mr. Jhon Mason"
+                  },
+                  "customerAddress": {
+                    "type": "string",
+                    "description": "Address of the customer",
+                    "default": "556 Crestlake Dr, San Francisco, CA 94132, USA"
+                  },
+                  "customerEmail": {
+                    "type": "string",
+                    "description": "Email Address of the customer",
+                    "default": "jhonMason@gmail.com"
+                  },
+                  "customerPhoneNumber": {
+                    "type": "string",
+                    "description": "Phone number of the customer with country code",
+                    "default": "+14152392212"
+                  },
+                  "restaurantName": {
+                    "type": "string",
+                    "description": "Name of the restaurant",
+                    "default": "Popeyes Louisiana Kitchen"
+                  },
+                  "restaurantAddress": {
+                    "type": "string",
+                    "description": "Address of the restaurant",
+                    "default": "890 Geneva Ave, San Francisco, CA 94112, United States"
+                  },
+                  "restaurantPhoneNumber": {
+                    "type": "string",
+                    "description": "Phone number of the restaurant with country code",
+                    "default": "+14152392013"
+                  },
+                  "expectedDeliveryDate": {
+                    "type": "string",
+                    "description": "Expected delivery date in UTC for the particular order ( yyyy-mm-dd format)",
+                    "default": "2021-06-03",
+                    "format": "date"
+                  },
+                  "expectedPickupTime": {
+                    "type": "string",
+                    "description": "Expected pickup time in UTC for the particular order (format hh:mm:ss)",
+                    "default": "17:45:00",
+                    "format": "date-time"
+                  },
+                  "expectedDeliveryTime": {
+                    "type": "string",
+                    "description": "Expected Delivery Time in UTC for the particular order (format hh:mm:ss)",
+                    "default": "19:22:00",
+                    "format": "date-time"
+                  },
+                  "pickupLatitude": {
+                    "type": "number",
+                    "description": "Pickup location latitude",
+                    "default": 41.53867,
+                    "format": "double"
+                  },
+                  "pickupLongitude": {
+                    "type": "number",
+                    "description": "Pickup location longitude",
+                    "default": -72.0827,
+                    "format": "double"
+                  },
+                  "deliveryLatitude": {
+                    "type": "number",
+                    "description": "Delivery location latitude",
+                    "default": 41.53867,
+                    "format": "double"
+                  },
+                  "deliveryLongitude": {
+                    "type": "number",
+                    "description": "Delivery location longitude",
+                    "default": -72.0827,
+                    "format": "double"
+                  },
+                  "orderItem": {
+                    "type": "array",
+                    "description": "Array of Order item objects",
+                    "items": {
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "description": "Name of the order item",
+                          "default": "Popcorn Shrimp"
+                        },
+                        "quantity": {
+                          "type": "integer",
+                          "description": "Quantity of the order item",
+                          "default": 3,
+                          "format": "int32"
+                        },
+                        "unitPrice": {
+                          "type": "number",
+                          "description": "Price of the order item per unit",
+                          "default": 2.99,
+                          "format": "double"
+                        },
+                        "addOns": {
+                          "type": "array",
+                          "description": "Array of Add-on items",
+                          "default": [],
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "detail": {
+                          "type": "string",
+                          "description": "Detailed note (if given)",
+                          "default": "Please add less salt"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "tips": {
+                    "type": "number",
+                    "description": "Tips amount for the order",
+                    "default": 2.5,
+                    "format": "double"
+                  },
+                  "tax": {
+                    "type": "number",
+                    "description": "Tax amount for the order",
+                    "default": 1.5,
+                    "format": "double"
+                  },
+                  "discountAmount": {
+                    "type": "number",
+                    "description": "Discount amount for the order",
+                    "default": 1.5,
+                    "format": "double"
+                  },
+                  "deliveryFee": {
+                    "type": "number",
+                    "description": "Delivery fee amount for the order",
+                    "default": 3,
+                    "format": "double"
+                  },
+                  "totalOrderCost": {
+                    "type": "number",
+                    "description": "Total cost for the particular order",
+                    "default": 13.47,
+                    "format": "double"
+                  },
+                  "pickupInstruction": {
+                    "type": "string",
+                    "description": "Pickup related instructions for the order"
+                  },
+                  "deliveryInstruction": {
+                    "type": "string",
+                    "description": "Delivery Instruction for the driver or restaurant (if given)",
+                    "default": "fast"
+                  },
+                  "orderSource": {
+                    "type": "string",
+                    "description": "Source of the order",
+                    "default": "Seamless"
+                  },
+                  "additionalId": {
+                    "type": "string",
+                    "description": "Additional ID for the order",
+                    "default": "4532"
+                  },
+                  "clientRestaurantId": {
+                    "type": "integer",
+                    "description": "Client Restaurant ID",
+                    "default": 12,
+                    "format": "int32"
+                  },
+                  "paymentMethod": {
+                    "type": "string",
+                    "description": "Selected payment method for the order",
+                    "default": "credit_card"
+                  },
+                  "creditCardType": {
+                    "type": "string",
+                    "description": "Type of the credit card ( Not needed if the payment method is 'cash' )",
+                    "default": "visa"
+                  },
+                  "creditCardId": {
+                    "type": "integer",
+                    "description": "Last four digits of the credit card ( Not needed if the payment method is 'cash' )",
+                    "default": 1234,
+                    "format": "int32"
+                  },
+                  "pickup": {
+                    "type": "object",
+                    "description": "Pickup details breakdown",
+                    "properties": {
+                      "address": {
+                        "type": "object",
+                        "description": "Address details",
+                        "properties": {
+                          "unit": {
+                            "type": "string",
+                            "description": "unit/address line 2"
+                          },
+                          "street": {
+                            "type": "string",
+                            "description": "street/address line 1"
+                          },
+                          "city": {
+                            "type": "string"
+                          },
+                          "state": {
+                            "type": "string"
+                          },
+                          "zip": {
+                            "type": "string"
+                          },
+                          "country": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "dropoff": {
+                    "type": "object",
+                    "description": "Dropoff details breakdown",
+                    "properties": {
+                      "address": {
+                        "type": "object",
+                        "description": "Address details",
+                        "properties": {
+                          "unit": {
+                            "type": "string",
+                            "description": "unit/address line 2"
+                          },
+                          "street": {
+                            "type": "string",
+                            "description": "street/address line 1"
+                          },
+                          "city": {
+                            "type": "string"
+                          },
+                          "state": {
+                            "type": "string"
+                          },
+                          "zip": {
+                            "type": "string"
+                          },
+                          "country": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "isCatering": {
+                    "type": "boolean",
+                    "description": "Marker of catering order",
+                    "default": false
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": {
+                      "success": true,
+                      "response": "Order inserted with id 32841107",
+                      "orderId": 32841107
+                    }
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true,
+                      "default": true
+                    },
+                    "orderId": {
+                      "type": "integer",
+                      "example": 118,
+                      "default": 0
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false,
+        "x-readme": {
+          "code-samples": [
+            {
+              "language": "curl",
+              "code": "curl --request POST \\\n     --url https://api.shipday.com/orders \\\n     --header 'Accept: application/json' \\\n     --header 'Authorization: Basic BgxsDwd00n.LNNn90QydrjgZ1K9dS13' \\\n     --header 'Content-Type: application/json' \\\n     --header 'x-api-key: null' \\\n     --data '\n{\n     \"orderNumber\": \"99qT5A\",\n     \"customerName\": \"Mr. Jhon Mason\",\n     \"customerAddress\": \"556 Crestlake Dr, San Francisco, CA 94132, USA\",\n     \"customerEmail\": \"jhonMason@gmail.com\",\n     \"customerPhoneNumber\": \"+14152392212\",\n     \"restaurantName\": \"Popeyes Louisiana Kitchen\",\n     \"restaurantAddress\": \"890 Geneva Ave, San Francisco, CA 94112, United States\",\n     \"restaurantPhoneNumber\": \"+14152392013\",\n     \"expectedDeliveryDate\": \"2021-06-03\",\n     \"expectedPickupTime\": \"17:45:00\",\n     \"expectedDeliveryTime\": \"19:22:00\",\n     \"pickupLatitude\": 41.53867,\n     \"pickupLongitude\": -72.0827,\n     \"deliveryLatitude\": 41.53867,\n     \"deliveryLongitude\": -72.0827,\n     \"tips\": 2.5,\n     \"tax\": 1.5,\n     \"discountAmount\": 1.5,\n     \"deliveryFee\": 3,\n     \"totalOrderCost\": 13.47,\n     \"deliveryInstruction\": \"fast\",\n     \"orderSource\": \"Seamless\",\n     \"additionalId\": \"4532\",\n     \"clientRestaurantId\": 12,\n     \"paymentMethod\": \"credit_card\",\n     \"creditCardType\": \"visa\",\n     \"creditCardId\": 1234\n}\n'"
+            },
+            {
+              "language": "javascript",
+              "code": "const shipday = require(\"shipday/integration\");\nconst OrderInfoRequest = require(\"shipday/integration/order/request/order.info.request\");\nconst PaymentMethod = require(\"shipday/integration/order/types/payment.method\");\nconst CardType = require(\"shipday/integration/order/types/card.type\");\nconst OrderItem = require(\"shipday/integration/order/request/order.item\");\n\nconst shipdayClient = new shipday('BgxsDwd00n.LNNn90Qydr', 55800);\n\nconst orderInfoRequest = new OrderInfoRequest(\n  \"99qT5A\",\n  \"Mr. Jhon Mason\",\n  \"556 Crestlake Dr, San Francisco, CA 94132, USA\",\n  \"jhonMason@gmail.com\",\n  \"+14152392212\",\n  \"Popeyes Louisiana Kitchen\",\n  \"890 Geneva Ave, San Francisco, CA 94112, United States\"\n);\n\norderInfoRequest.setRestaurantPhoneNumber(\"+14152392013\");\norderInfoRequest.setExpectedDeliveryDate(\"2021-06-03\");\norderInfoRequest.setExpectedDeliveryTime(\"17:45:00\");\norderInfoRequest.setExpectedPickupTime(\"19:22:00\");\norderInfoRequest.setPickupLatLong(41.53867, -72.0827);\norderInfoRequest.setDeliveryLatLong(41.53867, -72.0827);\norderInfoRequest.setTips(2.5);\norderInfoRequest.setTax(1.5);\norderInfoRequest.setDiscountAmount(1.5);\norderInfoRequest.setDeliveryFee(3);\norderInfoRequest.setTotalOrderCost(32.47);\norderInfoRequest.setDeliveryInstruction(\"Please leave the items by the door\");\norderInfoRequest.setOrderSource(\"Seamless\");\norderInfoRequest.setAdditionalId(\"4532\");\norderInfoRequest.setClientRestaurantId(12);\n\nconst paymentOption = PaymentMethod.CREDIT_CARD;\nconst cardType = CardType.AMEX;\n\norderInfoRequest.setPaymentMethod(paymentOption);\norderInfoRequest.setCreditCardType(cardType);\n\nconst itemsArr = [];\nitemsArr.push(new OrderItem(\"Double Cheese Burger\", 23, 1));\n\nitemsArr.push(new OrderItem(\"Coke\", 5, 1));\n\norderInfoRequest.setOrderItems(itemsArr);\n\nshipdayClient.orderService\n  .insertOrder(orderInfoRequest)\n  .then((res) => console.log(res))\n  .catch((e) => console.log(e));\n\n\n\n",
+              "name": "Shipday SDK"
+            },
+            {
+              "language": "python",
+              "code": "#install shipday with 'pip install shipday'\n\n\nfrom shipday import Shipday\nfrom shipday.order import Address, Customer, Pickup, OrderItem, Order\n\nAPI_KEY = '##########.#######################'\nshipday_obj = Shipday(api_key=API_KEY)\n\n# Add customer details\nnew_order.customer = Customer(\n    name='Mr. John Mason', email='johnMason@gmail.com', phone_number='+14152392212',\n    address=Address(street='556 Crestlake Dr', city='San Francisco', state='California', country='USA')\n)\n\n# Don't worry if you forget to send a parameter, you can also set it later like following line\nnew_order.customer.address.zip = 'CA 94132'\n\n# Add pickup details\nnew_order.pickup = Pickup(\n    name='Popeyes Louisiana Kitchen', phone_number='+14152392013'\n)\n\nnew_order.pickup.address = Address(street='890 Geneva Av', city='San Fransisco', state='California', zip='CA 94132',\n                                   country='USA')\n\n# Add order items\nnew_order.order_items = [OrderItem(name='Pizza', unit_price=10.0, quantity=1)]\nnew_order.order_items.append(\n    OrderItem(name='Popcorn Shrimp', quantity=1, unit_price=5)\n)\n\nshipday_obj.OrderService.insert_order(new_order)\n\n",
+              "name": "Shipday SDK"
+            },
+            {
+              "language": "text",
+              "code": "const shipday = require(\"shipday/integration\");\nconst OrderInfoRequest = require(\"shipday/integration/order/request/order.info.request\");\nconst PaymentMethod = require(\"shipday/integration/order/types/payment.method\");\nconst CardType = require(\"shipday/integration/order/types/card.type\");\nconst OrderItem = require(\"shipday/integration/order/request/order.item\");\n\nconst shipdayClient = new shipday('BgxsDwd00n.LNNn90Qydr', 55800);\n\nconst orderInfoRequest = new OrderInfoRequest(\n  \"99qT5A\",\n  \"Mr. Jhon Mason\",\n  \"556 Crestlake Dr, San Francisco, CA 94132, USA\",\n  \"jhonMason@gmail.com\",\n  \"+14152392212\",\n  \"Popeyes Louisiana Kitchen\",\n  \"890 Geneva Ave, San Francisco, CA 94112, United States\"\n);\n\norderInfoRequest.setRestaurantPhoneNumber(\"+14152392013\");\norderInfoRequest.setExpectedDeliveryDate(\"2021-06-03\");\norderInfoRequest.setExpectedDeliveryTime(\"17:45:00\");\norderInfoRequest.setExpectedPickupTime(\"19:22:00\");\norderInfoRequest.setPickupLatLong(41.53867, -72.0827);\norderInfoRequest.setDeliveryLatLong(41.53867, -72.0827);\norderInfoRequest.setTips(2.5);\norderInfoRequest.setTax(1.5);\norderInfoRequest.setDiscountAmount(1.5);\norderInfoRequest.setDeliveryFee(3);\norderInfoRequest.setTotalOrderCost(32.47);\norderInfoRequest.setDeliveryInstruction(\"Please leave the items by the door\");\norderInfoRequest.setOrderSource(\"Seamless\");\norderInfoRequest.setAdditionalId(\"4532\");\norderInfoRequest.setClientRestaurantId(12);\n\nconst paymentOption = PaymentMethod.CREDIT_CARD;\nconst cardType = CardType.AMEX;\n\norderInfoRequest.setPaymentMethod(paymentOption);\norderInfoRequest.setCreditCardType(cardType);\n\nconst itemsArr = [];\nitemsArr.push(new OrderItem(\"Double Cheese Burger\", 23, 1));\n\nitemsArr.push(new OrderItem(\"Coke\", 5, 1));\n\norderInfoRequest.setOrderItems(itemsArr);\n\nshipdayClient.orderService\n  .insertOrder(orderInfoRequest)\n  .then((res) => console.log(res))\n  .catch((e) => console.log(e));\n\n\n",
+              "name": "Shipday SDK 2"
+            }
+          ],
+          "samples-languages": [
+            "curl",
+            "javascript",
+            "python",
+            "text"
+          ]
+        }
+      }
+    },
+    "/orders/{ordernumber}": {
+      "get": {
+        "summary": "Retrieve Order Details",
+        "description": "",
+        "operationId": "retrieve-order-details",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "description": "Replace the BgxsDwd00n.LNNn90QydrjgZ1K9dS13 part with your own API_KEY from Shipday for authentication.",
+            "schema": {
+              "type": "string",
+              "default": "Basic BgxsDwd00n.LNNn90QydrjgZ1K9dS13"
+            }
+          },
+          {
+            "name": "ordernumber",
+            "in": "path",
+            "required": true,
+            "description": "Order reference of the order",
+            "schema": {
+              "type": "string",
+              "default": ""
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "[\n  {\n    \"orderId\": 20625,\n    \"orderNumber\": \"7568\",\n    \"companyId\": 409,\n    \"areaId\": 406,\n    \"customer\": {\n      \"name\": \"Scarlett\",\n      \"address\": \"173A, East Kafrul, Dhaka - 1206\",\n      \"phoneNumber\": \"+14157537081\",\n      \"emailAddress\": \"scarlett.evana@gmail.com\",\n      \"latitude\": 37.735563,\n      \"longitude\": -122.502288\n    },\n    \"restaurant\": {\n      \"id\": 2322323,\n      \"name\": \"Thai Cottage Restaurant\",\n      \"address\": \"4041 Judah St, San Francisco, CA 94122, United States\",\n      \"phoneNumber\": \"+14155665311\",\n      \"latitude\": 37.760447,\n      \"longitude\": -122.5055599,\n    },\n    \"assignedCarrier\": {\n      \"id\": 30309,\n      \"personalId\": null,\n      \"name\": \"Steve\",\n      \"codeName\": null,\n      \"phoneNumber\": \"+123424233\",\n      \"companyId\": null,\n      \"areaId\": null,\n      \"isOnShift\": true,\n      \"email\": \"steve93@gmail.com\",\n      \"carrierPhoto\": \"https://s3-us-west-2.amazonaws.com/qt.com.dashboard.profile.driver/somelinktothecarrier.jpg\",\n      \"isActive\": true,\n    },\n    \"distance\": 2.011,\n    \"activityLog\": {\n      \"placementTime\": \"2020-11-29T11:43:59\",\n      \"expectedPickupTime\": \"12:12\",\n      \"expectedDeliveryDate\": \"2020-11-29\",\n      \"expectedDeliveryTime\": \"12:42\",\n      \"assignedTime\": null,\n      \"startTime\": \"2020-11-30T13:41:07\",\n      \"pickedUpTime\": \"2020-12-01T05:43:15\",\n      \"arrivedTime\": \"2020-12-01T05:43:15\",\n      \"deliveryTime\": \"2020-12-01T05:43:15\"\n    },\n    \"costing\": {\n      \"totalCost\": 29.8,\n      \"deliveryFee\": 2.5,\n      \"tip\": 0,\n      \"discountAmount\": 0,\n      \"tax\": 1.3,\n      \"cashTip\": 0\n    },\n    \"paymentMethod\": \"CASH\",\n    \"orderItems\": [\n      {\n        \"name\": \"Pad Thai\",\n        \"quantity\": 2,\n        \"unitPrice\": 13\n      }\n    ],\n    \"assignedCarrierId\": -1,\n    \"orderStatus\": {\n      \"incomplete\": false,\n      \"accepted\": true,\n      \"orderState\": \"ALREADY_DELIVERED\"\n    },\n    \"trackingLink\": null,\n    \"feedback\": null,\n    \"schedule\": false,\n    \"parentId\": 0,\n    \"etaTime\": \"\",\n    \"deliveryInstruction\": null\n  }\n]"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false,
+        "x-readme": {
+          "code-samples": [
+            {
+              "language": "curl",
+              "code": "curl --request GET \\\n     --url https://api.shipday.com/orders/ordernumber \\\n     --header 'Accept: application/json' \\\n     --header 'Authorization: Basic BgxsDwd00n.LNNn90QydrjgZ1K9dS13' \\"
+            },
+            {
+              "language": "python",
+              "code": "const shipday = require(\"shipday/integration\");\n\nconst shipdayClient = new shipday('BgxsDwd00n.LNNn90Qydr', 55800);\n\nshipdayClient.orderService.getOrderDetails('123213')\n  .then(r => console.log(r))\n  .catch(e => console.log(e.message));",
+              "name": "Shipday SDK"
+            },
+            {
+              "language": "python",
+              "code": "#install Shipday SDK with 'pip install shipday'\n\nfrom shipday import Shipday\n\nAPI_KEY = '##########.#######################'\nshipday_obj = Shipday(api_key=API_KEY)\nmy_orders = shipday_obj.OrderService.get_orders()\n\n\n",
+              "name": "Shipday SDK"
+            }
+          ],
+          "samples-languages": [
+            "curl",
+            "python"
+          ]
+        }
+      }
+    },
+    "/orders/query": {
+      "post": {
+        "summary": "Orders Query",
+        "description": "",
+        "operationId": "delivery-orders-query",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "Replace the BgxsDwd00n.LNNn90QydrjgZ1K9dS13 part with your own API_KEY from Shipday for authentication.",
+            "schema": {
+              "type": "string",
+              "default": "Basic BgxsDwd00n.LNNn90QydrjgZ1K9dS13"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "startTime": {
+                    "type": "string",
+                    "description": "Starting time for the query. Placement time of the orders will be compared.",
+                    "default": "2020-01-01T00:00:00Z",
+                    "format": "date-time"
+                  },
+                  "endTime": {
+                    "type": "string",
+                    "description": "Ending time for the query. Placement time of the orders will be compared.",
+                    "default": "2021-04-11T23:59:59Z",
+                    "format": "date-time"
+                  },
+                  "orderStatus": {
+                    "type": "string",
+                    "description": "Order status from the supported status types.",
+                    "default": "ALREADY_DELIVERED"
+                  },
+                  "startCursor": {
+                    "type": "integer",
+                    "description": "Starting pointer of the retrieved order list. This marker is used for paginating the result.<br/><br/><strong>Default:</strong> 1",
+                    "default": 1,
+                    "format": "int32"
+                  },
+                  "endCursor": {
+                    "type": "integer",
+                    "description": "Ending pointer of the retrieved order list. This marker is used for paginating the result. In combination with the startCursor it will determine which rows to return. <br/><br/> For example, startCursor=26 and endCursor=50 will return 25 orders data ranging from 26th to 50th rows sorted in descending order of order placement time having the most recent one at the top.<br/><br/><strong>Default:</strong> 100",
+                    "default": 3,
+                    "format": "int32"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "[\n  {\n    \"orderId\": 2413471,\n    \"orderNumber\": \"98\",\n    \"companyId\": 1199,\n    \"orderItem\": \"[{unitPrice:10.0,quantity:1,name:Box}]\",\n    \"accepted\": true,\n    \"placementTime\": \"2021-04-08T17:23:21Z\",\n    \"requestedPickupTime\": \"2020-03-20T11:35:19Z\",\n    \"requestedDeliveryTime\": \"2020-03-20T12:05:19Z\",\n    \"assignedTime\": \"2021-04-08T20:14:31Z\",\n    \"startTime\": \"2021-04-08T20:14:47Z\",\n    \"pickedupTime\": \"2021-04-08T20:14:49Z\",\n    \"arrivedTime\": \"2021-04-08T20:14:50Z\",\n    \"deliveryTime\": \"2021-04-08T20:14:52Z\",\n    \"failedDeliveryTime\": null,\n    \"deliveryNote\": \"O\",\n    \"deliveryInstruction\": null,\n    \"dispatcherNote\": null,\n    \"paymentMethod\": null,\n    \"orderSource\": \"\",\n    \"incomplete\": false,\n    \"orderTotal\": 10,\n    \"deliveryFee\": 0,\n    \"tip\": 0,\n    \"discount\": 0,\n    \"tax\": 0,\n    \"driverPayment\": 0,\n    \"distance\": 0.883786088220417,\n    \"carrier\": {\n      \"id\": 2501,\n      \"name\": \"Mark\",\n      \"phone\": \"0124121211\",\n      \"email\": \"mark12@gmail.com\",\n      \"status\": \"0\",\n      \"vehiclePlateNumber\": \"\",\n      \"vehicleDescription\": \"\",\n      \"note\": \"\",\n      \"imageUrl\": \"https://s3-us-west-2.amazonaws.com/qt.com.dashboard.profile.driver/621c3825230247a8bbab6dc9a20431ce.jpg\",\n      \"partner\": \"None\"\n    },\n    \"pickup\": {\n      \"id\": 191101,\n      \"name\": \"XYZ Delivery\",\n      \"address\": \"Seattle, WA, USA\",\n      \"formattedAddress\": \"Seattle, WA, USA\",\n      \"phone\": \"+11121212121\",\n      \"lat\": 47.6062095,\n      \"lng\": -122.3320708\n    },\n    \"delivery\": {\n      \"id\": 66561,\n      \"name\": \"Jonathan Banh\",\n      \"address\": \"2720 3rd Avenue Apt 407, Mosler Lofts, Seattle, WA, 98121\",\n      \"formattedAddress\": \"2720 3rd Ave APT 407, Seattle, WA 98121, USA\",\n      \"phone\": \"4083070862\",\n      \"email\": \"banh.Jon@yahoo.com\",\n      \"lat\": 47.61766600000001,\n      \"lng\": -122.3492015\n    },\n    \"status\": \"ALREADY_DELIVERED\"\n  },\n  {\n    \"orderId\": 2300714,\n    \"orderNumber\": \"5\",\n    \"companyId\": 1199,\n    \"orderItem\": \"[{name:Tea pot,quantity:1,unitPrice:5}]\",\n    \"accepted\": true,\n    \"placementTime\": \"2021-03-27T17:34:40Z\",\n    \"requestedPickupTime\": \"2021-03-26T17:54:00Z\",\n    \"requestedDeliveryTime\": \"2021-03-26T18:34:00Z\",\n    \"assignedTime\": \"2021-03-27T17:41:42Z\",\n    \"startTime\": \"2021-03-27T17:42:22Z\",\n    \"pickedupTime\": \"2021-03-27T17:45:20Z\",\n    \"arrivedTime\": \"2021-04-08T20:14:15Z\",\n    \"deliveryTime\": \"2021-04-08T20:14:18Z\",\n    \"failedDeliveryTime\": null,\n    \"deliveryNote\": \"\",\n    \"deliveryInstruction\": null,\n    \"dispatcherNote\": null,\n    \"paymentMethod\": \"CASH\",\n    \"orderSource\": \"\",\n    \"incomplete\": false,\n    \"orderTotal\": 5,\n    \"deliveryFee\": 0,\n    \"tip\": 0,\n    \"discount\": 0,\n    \"tax\": 0,\n    \"driverPayment\": 0,\n    \"distance\": 1.33233863,\n    \"carrier\": {\n      \"id\": 2501,\n      \"name\": \"Kayle\",\n      \"phone\": \"+1234567891\",\n      \"email\": \"kayle22@gmail.com\",\n      \"status\": \"0\",\n      \"vehiclePlateNumber\": \"\",\n      \"vehicleDescription\": \"\",\n      \"note\": \"\",\n      \"imageUrl\": \"https://s3-us-west-2.amazonaws.com/qt.com.dashboard.profile.driver/621c3825230247a8bbab6dc9a20431ce.jpg\",\n      \"partner\": \"None\"\n    },\n    \"pickup\": {\n      \"id\": 183258,\n      \"name\": \"Rocky Mountain Tea store\",\n      \"address\": \"890 Geneva Ave, San Francisco, CA 94112, United States\",\n      \"formattedAddress\": \"890 Geneva Ave, San Francisco, CA 94112, United States\",\n      \"phone\": \"+11112221\",\n      \"lat\": 22.874216,\n      \"lng\": -172.4000992\n    },\n    \"delivery\": {\n      \"id\": 1730761,\n      \"name\": \"Niki\",\n      \"address\": \"460 Ramona St, Palo Alto, CA 94301, United States\",\n      \"formattedAddress\": \"460 Ramona St, Palo Alto, CA 94301, United States\",\n      \"phone\": \"+151232323212\",\n      \"email\": \"niki43@gmail.com\",\n      \"lat\": 22.8355565,\n      \"lng\": -172.4184477\n    },\n    \"status\": \"ALREADY_DELIVERED\"\n  },\n  {\n    \"orderId\": 2300704,\n    \"orderNumber\": \"41223\",\n    \"companyId\": 1199,\n    \"orderItem\": \"[{name:Banana,quantity:11,unitPrice:0.5}]\",\n    \"accepted\": true,\n    \"placementTime\": \"2021-03-27T17:34:12Z\",\n    \"requestedPickupTime\": \"2021-03-26T17:53:00Z\",\n    \"requestedDeliveryTime\": \"2021-03-26T18:33:00Z\",\n    \"assignedTime\": \"2021-03-27T17:41:42Z\",\n    \"startTime\": \"2021-03-27T17:42:15Z\",\n    \"pickedupTime\": \"2021-03-27T17:45:20Z\",\n    \"arrivedTime\": \"2021-04-08T20:13:00Z\",\n    \"deliveryTime\": \"2021-04-08T20:13:12Z\",\n    \"failedDeliveryTime\": null,\n    \"deliveryNote\": \"Leave the package by the door if no one is available\",\n    \"deliveryInstruction\": null,\n    \"dispatcherNote\": null,\n    \"paymentMethod\": \"CASH\",\n    \"orderSource\": \"\",\n    \"incomplete\": false,\n    \"orderTotal\": 5.5,\n    \"deliveryFee\": 0,\n    \"tip\": 0,\n    \"discount\": 0,\n    \"tax\": 0,\n    \"driverPayment\": 0,\n    \"distance\": 2.9833863,\n    \"carrier\": {\n      \"id\": 2501,\n      \"name\": \"Anderson\",\n      \"phone\": \"+1231231211\",\n      \"email\": \"andyContact@gmail.com\",\n      \"status\": \"0\",\n      \"vehiclePlateNumber\": \"\",\n      \"vehicleDescription\": \"\",\n      \"note\": \"\",\n      \"imageUrl\": \"https://s3-us-west-2.amazonaws.com/qt.com.dashboard.profile.driver/621c3825230247a8bbab6dc9a20431ce.jpg\",\n      \"partner\": \"None\"\n    },\n    \"pickup\": {\n      \"id\": 183258,\n      \"name\": \"XYZ Delivery\",\n      \"address\": \"460 Ramona St, Palo Alto, CA 94301, United States\",\n      \"formattedAddress\": \"460 Ramona St, Palo Alto, CA 94301, United States\",\n      \"phone\": \"+111212322\",\n      \"lat\": 22.874216,\n      \"lng\": -172.4000992\n    },\n    \"delivery\": {\n      \"id\": 1730753,\n      \"name\": \"Jassica\",\n      \"address\": \"CVV4+C7 Palo Alto, California, United States\",\n      \"formattedAddress\": \"CVV4+C7 Palo Alto, California, United States\",\n      \"phone\": \"+1512322132\",\n      \"email\": \"Jassica12@gmail.com\",\n      \"lat\": 22.7392481,\n      \"lng\": -172.3958189\n    },\n    \"status\": \"ALREADY_DELIVERED\"\n  }\n]"
+                  }
+                },
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "orderId": {
+                        "type": "integer",
+                        "example": 2413471,
+                        "default": 0
+                      },
+                      "orderNumber": {
+                        "type": "string",
+                        "example": "98"
+                      },
+                      "companyId": {
+                        "type": "integer",
+                        "example": 1199,
+                        "default": 0
+                      },
+                      "orderItem": {
+                        "type": "string",
+                        "example": "[{unitPrice:10.0,quantity:1,name:Box}]"
+                      },
+                      "accepted": {
+                        "type": "boolean",
+                        "example": true,
+                        "default": true
+                      },
+                      "placementTime": {
+                        "type": "string",
+                        "example": "2021-04-08T17:23:21Z"
+                      },
+                      "requestedPickupTime": {
+                        "type": "string",
+                        "example": "2020-03-20T11:35:19Z"
+                      },
+                      "requestedDeliveryTime": {
+                        "type": "string",
+                        "example": "2020-03-20T12:05:19Z"
+                      },
+                      "assignedTime": {
+                        "type": "string",
+                        "example": "2021-04-08T20:14:31Z"
+                      },
+                      "startTime": {
+                        "type": "string",
+                        "example": "2021-04-08T20:14:47Z"
+                      },
+                      "pickedupTime": {
+                        "type": "string",
+                        "example": "2021-04-08T20:14:49Z"
+                      },
+                      "arrivedTime": {
+                        "type": "string",
+                        "example": "2021-04-08T20:14:50Z"
+                      },
+                      "deliveryTime": {
+                        "type": "string",
+                        "example": "2021-04-08T20:14:52Z"
+                      },
+                      "failedDeliveryTime": {},
+                      "deliveryNote": {
+                        "type": "string",
+                        "example": "O"
+                      },
+                      "deliveryInstruction": {},
+                      "dispatcherNote": {},
+                      "paymentMethod": {},
+                      "orderSource": {
+                        "type": "string",
+                        "example": ""
+                      },
+                      "incomplete": {
+                        "type": "boolean",
+                        "example": false,
+                        "default": true
+                      },
+                      "orderTotal": {
+                        "type": "integer",
+                        "example": 10,
+                        "default": 0
+                      },
+                      "deliveryFee": {
+                        "type": "integer",
+                        "example": 0,
+                        "default": 0
+                      },
+                      "tip": {
+                        "type": "integer",
+                        "example": 0,
+                        "default": 0
+                      },
+                      "discount": {
+                        "type": "integer",
+                        "example": 0,
+                        "default": 0
+                      },
+                      "tax": {
+                        "type": "integer",
+                        "example": 0,
+                        "default": 0
+                      },
+                      "driverPayment": {
+                        "type": "integer",
+                        "example": 0,
+                        "default": 0
+                      },
+                      "distance": {
+                        "type": "number",
+                        "example": 0.883786088220417,
+                        "default": 0
+                      },
+                      "carrier": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer",
+                            "example": 2501,
+                            "default": 0
+                          },
+                          "name": {
+                            "type": "string",
+                            "example": "Mark"
+                          },
+                          "phone": {
+                            "type": "string",
+                            "example": "0124121211"
+                          },
+                          "email": {
+                            "type": "string",
+                            "example": "mark12@gmail.com"
+                          },
+                          "status": {
+                            "type": "string",
+                            "example": "0"
+                          },
+                          "vehiclePlateNumber": {
+                            "type": "string",
+                            "example": ""
+                          },
+                          "vehicleDescription": {
+                            "type": "string",
+                            "example": ""
+                          },
+                          "note": {
+                            "type": "string",
+                            "example": ""
+                          },
+                          "imageUrl": {
+                            "type": "string",
+                            "example": "https://s3-us-west-2.amazonaws.com/qt.com.dashboard.profile.driver/621c3825230247a8bbab6dc9a20431ce.jpg"
+                          },
+                          "partner": {
+                            "type": "string",
+                            "example": "None"
+                          }
+                        }
+                      },
+                      "pickup": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer",
+                            "example": 191101,
+                            "default": 0
+                          },
+                          "name": {
+                            "type": "string",
+                            "example": "XYZ Delivery"
+                          },
+                          "address": {
+                            "type": "string",
+                            "example": "Seattle, WA, USA"
+                          },
+                          "formattedAddress": {
+                            "type": "string",
+                            "example": "Seattle, WA, USA"
+                          },
+                          "phone": {
+                            "type": "string",
+                            "example": "+11121212121"
+                          },
+                          "lat": {
+                            "type": "number",
+                            "example": 47.6062095,
+                            "default": 0
+                          },
+                          "lng": {
+                            "type": "number",
+                            "example": -122.3320708,
+                            "default": 0
+                          }
+                        }
+                      },
+                      "delivery": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer",
+                            "example": 66561,
+                            "default": 0
+                          },
+                          "name": {
+                            "type": "string",
+                            "example": "Jonathan Banh"
+                          },
+                          "address": {
+                            "type": "string",
+                            "example": "2720 3rd Avenue Apt 407, Mosler Lofts, Seattle, WA, 98121"
+                          },
+                          "formattedAddress": {
+                            "type": "string",
+                            "example": "2720 3rd Ave APT 407, Seattle, WA 98121, USA"
+                          },
+                          "phone": {
+                            "type": "string",
+                            "example": "4083070862"
+                          },
+                          "email": {
+                            "type": "string",
+                            "example": "banh.Jon@yahoo.com"
+                          },
+                          "lat": {
+                            "type": "number",
+                            "example": 47.61766600000001,
+                            "default": 0
+                          },
+                          "lng": {
+                            "type": "number",
+                            "example": -122.3492015,
+                            "default": 0
+                          }
+                        }
+                      },
+                      "status": {
+                        "type": "string",
+                        "example": "ALREADY_DELIVERED"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false,
+        "x-readme": {
+          "code-samples": [
+            {
+              "language": "curl",
+              "code": "curl --request POST \\\n     --url https://api.shipday.com/orders/query \\\n     --header 'Accept: application/json' \\\n     --header 'Authorization: Basic BgxsDwd00n.LNNn90QydrjgZ1K9dS13' \\\n     --header 'Content-Type: application/json' \\\n     --data '\n{\n     \"startTime\": \"2020-01-01T00:00:00Z\",\n     \"endTime\": \"2021-04-11T23:59:59Z\",\n     \"orderStatus\": \"ALREADY_DELIVERED\",\n     \"startCursor\": 1,\n     \"endCursor\": 3\n}\n'"
+            },
+            {
+              "language": "javascript",
+              "code": "const shipday = require('shipday/integration');\nconst OrderQueryRequest = require('shipday/integration/order/order.query.request');\nconst OrderState = require('shipday/integration/order/types/order.state');\n\nconst shipdayClient = new shipday('BgxsDwd00n.LNNn90Qydr', 55800);\n\nconst startDate = new Date();\nstartDate.setDate(1);\n\nconst endDate = new Date();\nendDate.setHours(15);\nconst orderQueryRequest = new OrderQueryRequest(\n   startDate,\n   endDate,\n   OrderState.STARTED,\n   null,\n   null\n);\n\nshipdayClient.orderService.getOrderQuery(orderQueryRequest).then(r => {\n   console.log(r);\n});\n\n\n",
+              "name": "Shipday SDK"
+            },
+            {
+              "language": "python",
+              "code": "#install Shipday SDK with 'pip install shipday'\n\nfrom shipday import Shipday\nfrom shipday.order import OrderQuery\n\nAPI_KEY = '##########.#######################'\nshipday_obj = Shipday(api_key=API_KEY)\n\nquery = OrderQuery()\n\nfrom datetime import datetime, timedelta\n\nquery.start_time = datetime.now() - timedelta(days=1)\n\nqueried_orders = shipday_obj.OrderService.query(query=query)\n\n\n",
+              "name": "Shipday SDK"
+            }
+          ],
+          "samples-languages": [
+            "curl",
+            "javascript",
+            "python"
+          ]
+        }
+      }
+    },
+    "/orders/{orderId}": {
+      "delete": {
+        "summary": "Delete Order",
+        "description": "",
+        "operationId": "delete-order",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "Replace the BgxsDwd00n.LNNn90QydrjgZ1K9dS13 part with your own API_KEY from Shipday for authentication.",
+            "schema": {
+              "type": "string",
+              "default": "Basic BgxsDwd00n.LNNn90QydrjgZ1K9dS13"
+            }
+          },
+          {
+            "in": "path",
+            "name": "orderId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "204",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": ""
+                  },
+                  "Result 1": {
+                    "value": "{}",
+                    "summary": "Result 1"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false,
+        "x-readme": {
+          "code-samples": [
+            {
+              "language": "curl",
+              "code": "curl --request DELETE \\\n     --url https://api.shipday.com/orders/orderId \\\n     --header 'Accept: application/json' \\\n     --header 'Authorization: Basic BgxsDwd00n.LNNn90QydrjgZ1K9dS13' \\"
+            },
+            {
+              "language": "javascript",
+              "code": "const shipday = require('shipday/integration');\n\nconst shipdayClient = new shipday('BgxsDwd00n.LNNn90Qydr', 55800);\n\nshipdayClient.orderService.deleteOrder(7952796)\n  .then(r => console.log(r))\n  .catch(e => console.log(e));",
+              "name": "Shipday SDK"
+            },
+            {
+              "language": "python",
+              "code": "#install Shipday SDK with 'pip install shipday'\n\nfrom shipday import Shipday\n\nAPI_KEY = '##########.#######################'\nshipday_obj = Shipday(api_key=API_KEY)\nshipday_obj.OrderService.delete_order(order_id=7995246)\n\n\n",
+              "name": "Shipday SDK"
+            }
+          ],
+          "samples-languages": [
+            "curl",
+            "javascript",
+            "python"
+          ]
+        }
+      }
+    },
+    "/orders/assign/{orderId}/{carrierId}": {
+      "put": {
+        "summary": "Assign Order to Driver",
+        "description": "",
+        "operationId": "assign-order",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "Replace the BgxsDwd00n.LNNn90QydrjgZ1K9dS13 part with your own API_KEY from Shipday for authentication.",
+            "schema": {
+              "type": "string",
+              "default": "Basic BgxsDwd00n.LNNn90QydrjgZ1K9dS13"
+            }
+          },
+          {
+            "in": "path",
+            "name": "orderId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "carrierId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "204",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": {
+                      "success": true,
+                      "response": "assignment successful"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false,
+        "x-readme": {
+          "code-samples": [
+            {
+              "language": "curl",
+              "code": "curl --request PUT \\\n     --url https://api.shipday.com/orders/assign/orderId/carrierId \\\n     --header 'Accept: application/json' \\\n     --header 'Authorization: Basic BgxsDwd00n.LNNn90QydrjgZ1K9dS13' \\\n     --header 'x-api-key: null'"
+            },
+            {
+              "language": "javascript",
+              "code": "const shipday = require('shipday/integration');\n\nconst shipdayClient = new shipday('BgxsDwd00n.LNNn90Qydr', 55800);\n\nshipdayClient.orderService.assignOrder(79522231, 7735)\n  .then(r => console.log(r))\n  .catch(e => console.log(e));\n\n\n",
+              "name": "Shipday SDK"
+            },
+            {
+              "language": "python",
+              "code": "from shipday import Shipday\n\nAPI_KEY = '##########.#######################'\nshipday_obj = Shipday(api_key=API_KEY)\n\nshipday_obj.OrderService.assign_order(order_id=7995257, carrier_id=242324)\n\n\n",
+              "name": "Shipday SDK"
+            }
+          ],
+          "samples-languages": [
+            "curl",
+            "javascript",
+            "python"
+          ]
+        }
+      }
+    },
+    "/orders/{orderId}/status": {
+      "put": {
+        "summary": "Order Status Update",
+        "description": "",
+        "operationId": "order-status-update",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "Replace the BgxsDwd00n.LNNn90QydrjgZ1K9dS13 part with your own API_KEY from Shipday for authentication.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "Basic BgxsDwd00n.LNNn90QydrjgZ1K9dS13"
+            }
+          },
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "application/json"
+            }
+          },
+          {
+            "in": "path",
+            "name": "orderId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "status"
+                ],
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "description": "Status of the order",
+                    "default": "STARTED"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": {
+                      "orderId": 16039690,
+                      "success": true,
+                      "response": "UPDATED STATUS: STARTED"
+                    }
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "orderId": {
+                      "type": "integer",
+                      "example": 13,
+                      "default": 0
+                    },
+                    "success": {
+                      "type": "boolean",
+                      "example": true,
+                      "default": true
+                    },
+                    "response": {
+                      "type": "string",
+                      "example": "UPDATED STATUS: STARTED"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false,
+        "x-readme": {
+          "code-samples": [
+            {
+              "code": "curl --location --request PUT 'https://api.shipday.com/orders/16039690/status' \\\n--header 'Authorization: Bearer TkauNMKeSg.DdTG8Xq9esATXYO9Cdnu' \\\n--header 'Content-Type: application/json' \\\n--header 'accept: application/json' \\\n--data '{\n    \"status\": \"STARTED\"\n}'",
+              "language": "shell",
+              "name": ""
+            }
+          ],
+          "samples-languages": [
+            "shell"
+          ]
+        }
+      }
+    },
+    "/orders/{orderId}/meta": {
+      "put": {
+        "summary": "Order Ready to Pickup",
+        "description": "",
+        "operationId": "order-ready-to-pickup",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "Replace the BgxsDwd00n.LNNn90QydrjgZ1K9dS13 part with your own API_KEY from Shipday for authentication.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "Basic BgxsDwd00n.LNNn90QydrjgZ1K9dS13"
+            }
+          },
+          {
+            "name": "Content-Type",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "default": "application/json"
+            }
+          },
+          {
+            "in": "path",
+            "name": "orderId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "readyToPickup"
+                ],
+                "properties": {
+                  "readyToPickup": {
+                    "type": "boolean",
+                    "description": "Pickup status in boolean",
+                    "default": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "summary": "Result",
+                    "value": "{}"
+                  }
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "202",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": ""
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400",
+            "content": {}
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": ""
+                  },
+                  "Result 1": {
+                    "value": "{}",
+                    "summary": "Result 1"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false,
+        "x-readme": {
+          "code-samples": [
+            {
+              "code": "curl --location --request PUT 'https://api.shipday.com/orders/32830058/meta' \\\n--header 'Authorization: Basic BgxsDwd00n.LNNn90QydrjgZ1K9dS13' \\\n--header 'Content-Type: application/json' \\\n--data '{\n    \"readyToPickup\": true\n}'",
+              "language": "shell",
+              "name": ""
+            }
+          ],
+          "samples-languages": [
+            "shell"
+          ]
+        }
+      }
+    },
+    "/orders/unassign/{orderId}": {
+      "put": {
+        "description": "",
+        "operationId": "unassign-order-from-driver",
+        "summary": "Unassign Order from Driver",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "description": "Replace the BgxsDwd00n.LNNn90QydrjgZ1K9dS13 part with your own API_KEY from Shipday for authentication.",
+            "schema": {
+              "type": "string",
+              "default": "Basic BgxsDwd00n.LNNn90QydrjgZ1K9dS13"
+            }
+          },
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "description": "Id of the order that will be unassigned from the driver.",
+            "schema": {
+              "type": "string",
+              "default": ""
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "New Example": {
+                    "summary": "New Example",
+                    "value": ""
+                  },
+                  "Result": {
+                    "summary": "Result",
+                    "value": {
+                      "success": true,
+                      "response": "Carrier removed."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{}",
+                    "summary": "Result"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-readme": {
+          "code-samples": [
+            {
+              "code": "curl --request PUT \\\n     --url https://api.shipday.com/orders/unassign/orderId \\\n     --header 'Accept: application/json' \\\n     --header 'Authorization: Basic BgxsDwd00n.LNNn90QydrjgZ1K9dS13' \\",
+              "language": "shell",
+              "name": ""
+            }
+          ],
+          "samples-languages": [
+            "shell"
+          ]
+        }
+      }
+    },
+    "/order/progress/{trackingId}": {
+      "get": {
+        "description": "",
+        "operationId": "get_orderprogress{orderId}",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "summary": "Result",
+                    "value": {
+                      "fixedData": {
+                        "order": {
+                          "orderNumber": "your_order_number"
+                        },
+                        "customer": {
+                          "name": "John Doe",
+                          "address": "State Farm Arena, State Farm Drive, Atlanta, GA, USA",
+                          "latitude": 33.7574062,
+                          "longitude": -84.396233
+                        },
+                        "restaurant": {
+                          "name": "My Restaurant",
+                          "address": "5th Avenue, New York, NY, USA",
+                          "latitude": 40.7744123,
+                          "longitude": -73.9656103
+                        },
+                        "carrier": {
+                          "id": 321743,
+                          "name": "Alice Johnson",
+                          "phoneNumber": "+12101234567",
+                          "imagePath": "William_Martin.png"
+                        },
+                        "isExpired": false
+                      },
+                      "dynamicData": {
+                        "orderStatus": {
+                          "startTime": "2025-06-24T16:28:29.000Z",
+                          "pickedTime": "2025-06-24T16:28:33.000Z",
+                          "arrivedTime": null,
+                          "deliveryTime": null,
+                          "failedDeliveryTime": null,
+                          "status": "PICKED_UP"
+                        },
+                        "carrierLocation": {
+                          "latitude": 37.822334,
+                          "longitude": -81.224434
+                        },
+                        "estimatedTimeInMinutes": "12",
+                        "detailEta": {
+                          "estimatedTimeInMinutes": 12,
+                          "pickUpTime": 0,
+                          "travelDistance": 3745.3496704217405,
+                          "travelDistanceTime": 11.636290872102045,
+                          "deliveryTime": 0,
+                          "orderPosition": 1,
+                          "startedOrder": 0,
+                          "calprog": ""
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{}",
+                    "summary": "Result"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "isStaticDataRequired",
+            "in": "query",
+            "required": true,
+            "description": "If `true`, the response includes the `fixedData` object which contains static details like customer, restaurant, and carrier info. If `false`, the `fixedData` object will be `null`, and only dynamic tracking data will be returned.",
+            "schema": {
+              "type": "string",
+              "default": "false"
+            }
+          },
+          {
+            "name": "trackingId",
+            "in": "path",
+            "required": true,
+            "description": "Tracking Id of the order.",
+            "schema": {
+              "type": "string",
+              "default": ""
+            }
+          }
+        ]
+      }
+    }
+  },
+  "x-readme": {
+    "headers": [],
+    "explorer-enabled": false,
+    "proxy-enabled": false
+  },
+  "x-readme-fauxas": true
+}

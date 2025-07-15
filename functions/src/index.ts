@@ -5,13 +5,16 @@ import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {onRequest} from "firebase-functions/v2/https";
 import {beforeUserCreated} from "firebase-functions/v2/identity";
 import {defineString} from "firebase-functions/params";
+import createShipday from 'shipday';
 
 initializeApp();
 
 const SHIPDAY_API_KEY = defineString("SHIPDAY_API_KEY");
 const SHIPDAY_WEBHOOK_SECRET = defineString("SHIPDAY_WEBHOOK_SECRET");
 
-// 1. beforeUserCreated: Triggered before a new user is created.
+const shipday = createShipday(SHIPDAY_API_KEY.value());
+
+// 1. beforeUserCreate: Triggered before a new user is created.
 export const setupnewuser = beforeUserCreated((event) => {
   const user = event.data;
   if (!user) {
@@ -20,7 +23,7 @@ export const setupnewuser = beforeUserCreated((event) => {
 
   const driverDocRef = getFirestore().collection("drivers").doc(user.uid);
 
-  driverDocRef.set({
+  return driverDocRef.set({
     uid: user.uid,
     personalInfo: {
       email: user.email || "",
@@ -86,28 +89,16 @@ export const activatedriver = onCall<{driverId: string}>(async (request) => {
     }
     const driverData = driverDoc.data();
 
-    // Dynamically import node-fetch
-    const {default: fetch} = await import("node-fetch");
-
-    // Call Shipday API to create driver
-    const shipdayResponse = await fetch("https://api.shipday.com/v1/drivers", {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Basic ${SHIPDAY_API_KEY.value()}`
-        },
-        body: JSON.stringify({
-            name: driverData?.personalInfo.fullName,
-            email: driverData?.personalInfo.email,
-            phoneNumber: driverData?.personalInfo.phone,
-        })
+    const shipdayResult = await shipday.driverService.addDriver({
+        name: driverData?.personalInfo.fullName,
+        email: driverData?.personalInfo.email,
+        phoneNumber: driverData?.personalInfo.phone,
     });
-
-    if (!shipdayResponse.ok) {
-        const errorText = await shipdayResponse.text();
-        throw new HttpsError("internal", `Error al crear el repartidor en Shipday: ${errorText}`);
+    
+    if (!shipdayResult.success) {
+        throw new HttpsError("internal", `Error al crear el repartidor en Shipday: ${shipdayResult.errorMessage}`);
     }
-    const shipdayResult = await shipdayResponse.json() as {id: number};
+    
     const shipdayId = shipdayResult.id;
 
 
