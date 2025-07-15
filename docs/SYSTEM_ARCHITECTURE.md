@@ -1,4 +1,3 @@
-
 # BeFast Central - Arquitectura y Lógica de Funcionamiento
 
 ## 1. Objetivo del Proyecto
@@ -81,3 +80,17 @@ Esta es la lógica más importante de la aplicación. BeFast **no pre-filtra** a
 *   **Consulta su Billetera:** Ve su saldo en tiempo real, su límite de deuda y su historial completo de transacciones.
 *   **Ve Incentivos:** Se le informa de las bonificaciones y tarifas especiales que están activas.
 *   **Consulta su Perfil:** Puede ver toda su información personal, de vehículo y legal.
+
+---
+
+## 6. Despliegue a Producción (Deployment)
+
+Es crucial entender que los cambios en el código fuente local (como las reglas de Firestore o las Cloud Functions) no se reflejan automáticamente en el proyecto de Firebase en la nube.
+
+*   **Código Fuente vs. Entorno en la Nube:** Los archivos como `firestore.rules` y `functions/src/index.ts` son los "planos". La Consola de Firebase muestra el producto "construido".
+*   **Desplegar Cambios:** Para aplicar los cambios del código a tu entorno de Firebase, debes usar la Firebase CLI.
+    *   Para actualizar las reglas de seguridad: `firebase deploy --only firestore:rules`
+    *   Para actualizar las funciones de backend: `firebase deploy --only functions`
+    *   Para desplegar todo el proyecto: `firebase deploy`
+
+Solo después de ejecutar estos comandos, verás las nuevas reglas y funciones activas en tu Consola de Firebase.
