@@ -16,9 +16,9 @@ export default function RegisterPage() {
       <div className="relative z-10 container mx-auto max-w-4xl">
         <Card className="w-full glass-card">
           <CardHeader className="text-center">
-             <Link href="/" className="mb-4 flex justify-center">
+             <div className="mb-4 flex justify-center">
                 <Logo />
-             </Link>
+             </div>
             <CardTitle className="text-3xl font-bold">Registro de Repartidor</CardTitle>
             <CardDescription className="text-md">
               Completa los siguientes pasos para unirte a la flota de BeFast.
