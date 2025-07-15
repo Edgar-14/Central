@@ -7,7 +7,7 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen w-full bg-gray-100 dark:bg-gray-900 py-12 px-4"
          style={{
-           backgroundImage: `url('https://i.ibb.co/bX1V4z7/IMG-9924.jpg')`,
+           backgroundImage: `url('https://i.ibb.co/9HnQNc4/Fondo-Befast-1.jpg')`,
            backgroundSize: 'cover',
            backgroundPosition: 'center',
            backgroundAttachment: 'fixed'

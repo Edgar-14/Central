@@ -7,7 +7,7 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900 p-4"
          style={{
-           backgroundImage: `url('https://i.ibb.co/M50gJ3k/226-A1568.jpg')`,
+           backgroundImage: `url('https://i.ibb.co/9HnQNc4/Fondo-Befast-1.jpg')`,
            backgroundSize: 'cover',
            backgroundPosition: 'center',
          }}>

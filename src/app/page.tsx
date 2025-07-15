@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -48,16 +49,16 @@ export default function Home() {
   ];
 
   const sliderImages = [
-    { src: "https://i.ibb.co/GQ09Wf7/226A1559.jpg", alt: "BeFast delivery driver" },
-    { src: "https://i.ibb.co/RpQSDZJ/226A1568.jpg", alt: "Restaurant kitchen" },
-    { src: "https://i.ibb.co/MrNdzc3/226A1953.jpg", alt: "Person driving car" },
-    { src: "https://i.ibb.co/1Gwk2DGs/226A1904.jpg", alt: "Driver with helmet" },
-    { src: "https://i.ibb.co/rKK9rVd/226A1715.jpg", alt: "Driver smiling" },
-    { src: "https://i.ibb.co/HLRmsn5/IMG-9924.jpg", alt: "Driver with delivery" },
-    { src: "https://i.ibb.co/XxYpq8m/IMG-9899.jpg", alt: "Food preparation" },
-    { src: "https://i.ibb.co/kg38Ksr/IMG-9827.jpg", alt: "Prepared dish" },
-    { src: "https://i.ibb.co/Rxh9yTT/IMG-9823.jpg", alt: "Delivery bag" },
-    { src: "https://i.ibb.co/SDP42mS/IMG-9831.jpg", alt: "Food packaging" },
+    { src: "https://i.ibb.co/rKK9rVd/226-A1715.jpg", alt: "Repartidor sonriendo" },
+    { src: "https://i.ibb.co/HLRmsn5/IMG-9924.jpg", alt: "Repartidor con entrega" },
+    { src: "https://i.ibb.co/XxYpq8m/IMG-9899.jpg", alt: "Preparación de comida" },
+    { src: "https://i.ibb.co/kg38Ksr/IMG-9827.jpg", alt: "Platillo preparado" },
+    { src: "https://i.ibb.co/Rxh9yTT/IMG-9823.jpg", alt: "Bolsa de entrega" },
+    { src: "https://i.ibb.co/SDP42mS/IMG-9831.jpg", alt: "Empaquetado de comida" },
+    { src: "https://i.ibb.co/RpQSDZJ/226-A1568.jpg", alt: "Cocina de restaurante" },
+    { src: "https://i.ibb.co/MrNdzc3/226-A1953.jpg", alt: "Persona conduciendo" },
+    { src: "https://i.ibb.co/1Gwk2Dk/226-A1904.jpg", alt: "Repartidor con casco" },
+    { src: "https://i.ibb.co/GQ09Wf7/226-A1559.jpg", alt: "Repartidor de BeFast" },
   ];
 
   return (
@@ -82,7 +83,7 @@ export default function Home() {
         <section className="relative w-full overflow-hidden py-20 md:py-32">
           <div className="absolute inset-0 z-0">
             <Image
-              src="https://i.ibb.co/RpQSDZJ/226A1568.jpg"
+              src="https://i.ibb.co/9HnQNc4/Fondo-Befast-1.jpg"
               alt="BeFast delivery driver"
               fill
               priority
