@@ -49,10 +49,12 @@ export default function Home() {
   ];
 
   const sliderImages = [
-    { src: "https://placehold.co/800x600.png", alt: "Repartidor con casco", "data-ai-hint": "delivery driver" },
-    { src: "https://placehold.co/800x600.png", alt: "Repartidor de BeFast", "data-ai-hint": "delivery courier" },
-    { src: "https://placehold.co/800x600.png", alt: "Platillo preparado", "data-ai-hint": "food plate" },
-    { src: "https://placehold.co/800x600.png", alt: "Empaquetado de comida", "data-ai-hint": "food packaging" },
+    { src: "https://firebasestorage.googleapis.com/v0/b/befast-central.appspot.com/o/226A6854.jpg?alt=media", alt: "Repartidor sonriendo", "data-ai-hint": "smiling courier" },
+    { src: "https://firebasestorage.googleapis.com/v0/b/befast-central.appspot.com/o/8a8d3ecc-45a1-4725-ac10-fa222fcfe92a.jpg?alt=media", alt: "Repartidor en motocicleta", "data-ai-hint": "motorcycle courier" },
+    { src: "https://firebasestorage.googleapis.com/v0/b/befast-central.appspot.com/o/86f61775-39e4-43a2-98da-69c8fda6b03e.jpg?alt=media", alt: "Comida preparada en un plato", "data-ai-hint": "prepared food" },
+    { src: "https://firebasestorage.googleapis.com/v0/b/befast-central.appspot.com/o/9ebcc671-1eda-4ab5-80e9-040a89ac164d.jpg?alt=media", alt: "Repartidor con mochila", "data-ai-hint": "courier backpack" },
+    { src: "https://firebasestorage.googleapis.com/v0/b/befast-central.appspot.com/o/IMG_9806.jpg?alt=media", alt: "Otro repartidor en moto", "data-ai-hint": "delivery driver" },
+    { src: "https://firebasestorage.googleapis.com/v0/b/befast-central.appspot.com/o/226A6884.jpg?alt=media", alt: "Entrega de comida", "data-ai-hint": "food delivery" }
   ];
 
   return (
@@ -75,7 +77,15 @@ export default function Home() {
 
       <main className="flex-1">
         <section className="relative w-full overflow-hidden py-20 md:py-32">
-           <div className="absolute inset-0 z-0 bg-background">
+           <div className="absolute inset-0 z-0">
+             <Image
+                src="https://firebasestorage.googleapis.com/v0/b/befast-central.appspot.com/o/Fondo-Befast-1.jpg?alt=media"
+                alt="Fondo de repartidores de BeFast"
+                fill
+                style={{ objectFit: 'cover' }}
+                className="opacity-20"
+                priority
+             />
              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent"></div>
           </div>
           
@@ -133,7 +143,7 @@ export default function Home() {
                                   fill
                                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                   style={{ objectFit: 'cover' }}
-                                  className="transition-transform duration-500 hover:scale-110"
+                                  className="transition-transform duration-500 group-hover:scale-110"
                                   {...(image['data-ai-hint'] && { 'data-ai-hint': image['data-ai-hint'] })}
                               />
                               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
