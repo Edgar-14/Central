@@ -17,9 +17,6 @@ export function Logo({ className, textClassName }: LogoProps) {
         height={36}
         className="rounded-lg"
       />
-      <span className={cn("hidden text-lg font-bold text-primary sm:inline-block", textClassName)}>
-        BeFast
-      </span>
     </Link>
   );
 }
