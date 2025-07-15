@@ -4,12 +4,12 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import type { Driver } from '@/lib/types';
 import { summarizeDriverDocuments } from '@/ai/flows/summarize-driver-documents';
 import { useToast } from '@/hooks/use-toast';
-import { Check, X, Sparkles, Loader2, Download, ExternalLink } from 'lucide-react';
+import { Check, X, Sparkles, Loader2, ExternalLink } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 
 interface ApplicationReviewModalProps {
   driver: Driver;
@@ -17,20 +17,60 @@ interface ApplicationReviewModalProps {
   onClose: () => void;
 }
 
+// Helper function to convert image URL to data URI
+async function toDataURL(url: string): Promise<string> {
+  const response = await fetch(url);
+  const blob = await response.blob();
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
 export function ApplicationReviewModal({ driver, isOpen, onClose }: ApplicationReviewModalProps) {
   const [summary, setSummary] = useState<string | null>(null);
   const [isLoadingSummary, setIsLoadingSummary] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleSummarize = async () => {
     setIsLoadingSummary(true);
     setSummary(null);
+    setError(null);
     try {
-      const result = await summarizeDriverDocuments(driver.documents);
+      // Convert all document URLs to data URIs in parallel
+      const [
+        ineDataUri,
+        licenseDataUri,
+        insuranceDataUri,
+        addressProofDataUri,
+        taxIdDataUri,
+        circulationCardDataUri,
+      ] = await Promise.all([
+        toDataURL(driver.documents.ineUrl),
+        toDataURL(driver.documents.licenseUrl),
+        toDataURL(driver.documents.insuranceUrl),
+        toDataURL(driver.documents.addressProofUrl),
+        toDataURL(driver.documents.taxIdUrl),
+        toDataURL(driver.documents.circulationCardUrl),
+      ]);
+
+      const result = await summarizeDriverDocuments({
+        ineDataUri,
+        licenseDataUri,
+        insuranceDataUri,
+        addressProofDataUri,
+        taxIdDataUri,
+        circulationCardDataUri,
+      });
+
       setSummary(result.summary);
     } catch (error) {
       console.error('Failed to summarize documents:', error);
+      setError('No se pudo generar el resumen de los documentos. Es posible que una de las imágenes no sea accesible o el servicio de IA no esté disponible.');
       toast({
         title: 'Error de IA',
         description: 'No se pudo generar el resumen de los documentos.',
@@ -43,7 +83,8 @@ export function ApplicationReviewModal({ driver, isOpen, onClose }: ApplicationR
 
   const handleAction = async (action: 'approve' | 'reject') => {
     setIsProcessing(true);
-    // Simulate API call to a Cloud Function (activateDriver or rejectApplication)
+    // TODO: Implement Cloud Function call (activateDriver or rejectApplication)
+    console.log(`Action: ${action} for driver ${driver.uid}`);
     await new Promise(resolve => setTimeout(resolve, 1500));
 
     toast({
@@ -116,10 +157,16 @@ export function ApplicationReviewModal({ driver, isOpen, onClose }: ApplicationR
               </CardHeader>
               <CardContent className="flex-1 text-sm">
                 {isLoadingSummary && <div className="flex items-center justify-center h-full"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertTitle>Error al Analizar</AlertTitle>
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
                 {summary ? (
                   <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">{summary}</div>
                 ) : (
-                  !isLoadingSummary && <p className="text-muted-foreground">Haz clic en "Analizar Documentos" para que la IA genere un resumen y detecte posibles problemas.</p>
+                  !isLoadingSummary && !error && <p className="text-muted-foreground">Haz clic en "Analizar Documentos" para que la IA genere un resumen y detecte posibles problemas.</p>
                 )}
               </CardContent>
             </Card>

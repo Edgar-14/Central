@@ -11,12 +11,12 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const SummarizeDriverDocumentsInputSchema = z.object({
-  ineUrl: z.string().describe('URL to the driver INE document.'),
-  licenseUrl: z.string().describe('URL to the driver license document.'),
-  insuranceUrl: z.string().describe('URL to the driver insurance document.'),
-  addressProofUrl: z.string().describe('URL to the driver address proof document.'),
-  taxIdUrl: z.string().describe('URL to the driver tax ID document.'),
-  circulationCardUrl: z.string().describe('URL to the driver circulation card document.'),
+  ineDataUri: z.string().describe("A photo of the driver's INE document, as a data URI."),
+  licenseDataUri: z.string().describe("A photo of the driver's license, as a data URI."),
+  insuranceDataUri: z.string().describe("A photo of the driver's insurance policy, as a data URI."),
+  addressProofDataUri: z.string().describe("A photo of the driver's proof of address, as a data URI."),
+  taxIdDataUri: z.string().describe("A photo of the driver's tax ID document, as a data URI."),
+  circulationCardDataUri: z.string().describe("A photo of the driver's circulation card, as a data URI."),
 });
 
 export type SummarizeDriverDocumentsInput = z.infer<typeof SummarizeDriverDocumentsInputSchema>;
@@ -39,12 +39,12 @@ const summarizeDriverDocumentsPrompt = ai.definePrompt({
 
   Summarize the following driver documents, and identify any missing information, discrepancies or potential compliance issues.
 
-  INE Document: {{media url=ineUrl}}
-  License Document: {{media url=licenseUrl}}
-  Insurance Document: {{media url=insuranceUrl}}
-  Address Proof Document: {{media url=addressProofUrl}}
-  Tax ID Document: {{media url=taxIdUrl}}
-  Circulation Card Document: {{media url=circulationCardUrl}}`,
+  INE Document: {{media url=ineDataUri}}
+  License Document: {{media url=licenseDataUri}}
+  Insurance Document: {{media url=insuranceDataUri}}
+  Address Proof Document: {{media url=addressProofDataUri}}
+  Tax ID Document: {{media url=taxIdDataUri}}
+  Circulation Card Document: {{media url=circulationCardDataUri}}`,
 });
 
 const summarizeDriverDocumentsFlow = ai.defineFlow({
