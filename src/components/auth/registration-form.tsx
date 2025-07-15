@@ -159,11 +159,11 @@ export function RegistrationForm() {
           rfc: data.rfc,
           nss: data.nss,
         },
-        vehicleInfo: { type: "Motocicleta", brand: "", plate: "" }, 
+        vehicleInfo: { type: "Motocicleta", brand: "", plate: "" }, // Placeholder
         legal: {
             contractVersion: "v1.2",
             signatureTimestamp: Date.now(),
-            ipAddress: "NA" // Should capture user IP
+            ipAddress: "NA" // Should capture user IP in a real app
         },
         documents: documentUrls,
         wallet: { currentBalance: 0, debtLimit: -500 },
@@ -238,7 +238,7 @@ export function RegistrationForm() {
                     key={doc.id}
                     control={methods.control}
                     name={doc.id}
-                    render={({ field: { onChange, ...field } }) => (
+                    render={({ field: { onChange, value, ...fieldProps } }) => (
                       <FormItem>
                         <FormLabel>{doc.name}</FormLabel>
                         <FormControl>
@@ -246,7 +246,6 @@ export function RegistrationForm() {
                             type="file"
                             accept=".pdf,.jpg,.jpeg,.png"
                             onChange={(e) => onChange(e.target.files?.[0])}
-                            {...field}
                            />
                         </FormControl>
                          <FormMessage />
