@@ -2,12 +2,13 @@ import {initializeApp} from "firebase-admin/app";
 import {getAuth} from "firebase-admin/auth";
 import {getFirestore, FieldValue} from "firebase-admin/firestore";
 import {onCall, HttpsError} from "firebase-functions/v2/https";
+import {onRequest} from "firebase-functions/v2/https";
 import {beforeUserCreated} from "firebase-functions/v2/identity";
 
 initializeApp();
 
-// 1. beforeUserCreated: Triggered before a new user is created.
-export const setupnewuser = beforeUserCreated((event) => {
+// 1. beforeUserCreate: Triggered before a new user is created.
+export const setupnewuser = beforeUserCreated(async (event) => {
   const user = event.data;
   if (!user) {
     throw new HttpsError("internal", "No user data provided for creation.");
@@ -15,7 +16,7 @@ export const setupnewuser = beforeUserCreated((event) => {
 
   const driverDocRef = getFirestore().collection("drivers").doc(user.uid);
 
-  return driverDocRef.set({
+  await driverDocRef.set({
     uid: user.uid,
     personalInfo: {
       email: user.email || "",
@@ -100,4 +101,63 @@ export const rejectapplication = onCall<{driverId: string}>(async (request) => {
     });
 
     return { success: true, message: "Solicitud rechazada." };
+});
+
+// 5. shipdayWebhook: Receives order updates from Shipday to update driver wallets.
+export const shipdaywebhook = onRequest(async (req, res) => {
+  // TODO: Add a secret to verify that the request is coming from Shipday.
+  const { orderId, driverId, eventType, order } = req.body;
+
+  if (!driverId || !orderId || !eventType) {
+    res.status(400).send("Missing required fields.");
+    return;
+  }
+  
+  if (eventType !== 'order_delivered') {
+    res.status(200).send("Event not relevant for wallet processing.");
+    return;
+  }
+
+  const driverDocRef = getFirestore().collection("drivers").doc(driverId);
+
+  try {
+    await getFirestore().runTransaction(async (transaction) => {
+      const driverDoc = await transaction.get(driverDocRef);
+      if (!driverDoc.exists) {
+        throw new Error(`Driver with ID ${driverId} not found.`);
+      }
+
+      const deliveryFee = order?.deliveryFee || 0;
+      const tip = order?.tip || 0;
+      const commission = deliveryFee * 0.20; // Example 20% commission
+      const totalCredit = deliveryFee + tip;
+      
+      const newBalance = (driverDoc.data()?.wallet.currentBalance || 0) + totalCredit - commission;
+
+      transaction.update(driverDocRef, { "wallet.currentBalance": newBalance });
+
+      const transactionRef = driverDocRef.collection("transactions").doc();
+      transaction.set(transactionRef, {
+        date: FieldValue.serverTimestamp(),
+        type: 'credit_delivery',
+        amount: totalCredit,
+        orderId,
+        description: `Entrega completada: +${totalCredit.toFixed(2)}`,
+      });
+      
+      const commissionRef = driverDocRef.collection("transactions").doc();
+      transaction.set(commissionRef, {
+        date: FieldValue.serverTimestamp(),
+        type: 'debit_commission',
+        amount: -commission,
+        orderId,
+        description: `Comisión de servicio: -${commission.toFixed(2)}`,
+      });
+    });
+
+    res.status(200).send("Wallet updated successfully.");
+  } catch (error) {
+    console.error(`Error processing webhook for order ${orderId}:`, error);
+    res.status(500).send("Internal Server Error");
+  }
 });

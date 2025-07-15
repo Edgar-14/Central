@@ -44,23 +44,30 @@ export function LoginForm() {
       const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
       const user = userCredential.user;
       
-      // In a real app with roles, you would get the custom claim here.
-      // For now, we simulate it based on email.
-      // const idTokenResult = await user.getIdTokenResult();
-      // const role = idTokenResult.claims.role;
+      const idTokenResult = await user.getIdTokenResult(true); // Force refresh to get latest claims
+      const role = idTokenResult.claims.role;
 
-      if (values.email.includes('admin')) {
+      if (role === 'admin' || role === 'superadmin') {
          toast({
             title: 'Inicio de Sesión Exitoso',
             description: 'Bienvenido, Administrador.',
         });
         router.push('/admin/applications');
-      } else {
+      } else if (role === 'driver') {
          toast({
             title: 'Inicio de Sesión Exitoso',
             description: 'Bienvenido, Repartidor.',
         });
         router.push('/driver/dashboard');
+      } else {
+        // Handle cases where the user has no specific role or is still pending
+        toast({
+          variant: 'default',
+          title: 'Inicio de Sesión Correcto',
+          description: 'Tu cuenta aún está siendo revisada. Serás redirigido.',
+        });
+        // Redirect to a pending/information page or just home
+        router.push('/');
       }
 
     } catch (error: any) {
