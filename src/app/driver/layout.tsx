@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Bell, User, LifeBuoy, Wallet, Menu, LogOut, Shield } from 'lucide-react';
@@ -16,6 +16,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ThemeToggle } from '@/components/shared/theme-toggle';
+import { auth } from '@/lib/firebase';
+import { useToast } from '@/hooks/use-toast';
 
 const navItems = [
   { href: '/driver/dashboard', icon: Wallet, label: 'Mi Billetera' },
@@ -25,6 +27,18 @@ const navItems = [
 
 export default function DriverLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    try {
+      await auth.signOut();
+      toast({ title: 'Sesión cerrada', description: 'Has cerrado sesión exitosamente.' });
+      router.push('/login');
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Error', description: 'No se pudo cerrar la sesión.' });
+    }
+  };
 
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
@@ -55,13 +69,14 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
             </Link>
           </nav>
            <div className="mt-auto p-4">
-             <Link
-                href="/login"
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+             <Button
+                variant="ghost"
+                onClick={handleLogout}
+                className="flex w-full justify-start items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
               >
                 <LogOut className="h-4 w-4" />
                 Cerrar Sesión
-              </Link>
+              </Button>
           </div>
         </div>
       </aside>
@@ -98,13 +113,14 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
                 </Link>
               </nav>
               <div className="mt-auto">
-                 <Link
-                    href="/login"
+                 <Button
+                    variant="ghost"
+                    onClick={handleLogout}
                     className="flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-primary"
                   >
                     <LogOut className="h-5 w-5" />
                     Cerrar Sesión
-                  </Link>
+                  </Button>
               </div>
             </SheetContent>
           </Sheet>
@@ -123,7 +139,7 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
               <DropdownMenuItem asChild><Link href="/driver/profile">Perfil</Link></DropdownMenuItem>
               <DropdownMenuItem asChild><Link href="/driver/support">Soporte</Link></DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem asChild><Link href="/login">Cerrar Sesión</Link></DropdownMenuItem>
+              <DropdownMenuItem onClick={handleLogout}>Cerrar Sesión</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </header>

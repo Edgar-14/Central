@@ -5,7 +5,7 @@ import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -13,6 +13,9 @@ import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Loader2, UploadCloud, FileText, Video, Award, Send } from 'lucide-react';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { auth, db } from '@/lib/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 
 const steps = [
   { id: 1, name: 'Cuenta y Datos Personales', icon: FileText },
@@ -28,8 +31,10 @@ const formSchema = z.object({
   password: z.string().min(8, { message: 'La contraseña debe tener al menos 8 caracteres.' }),
   confirmPassword: z.string(),
   fullName: z.string().min(3, { message: 'Nombre requerido.' }),
+  phone: z.string().min(10, { message: 'Teléfono requerido.' }),
   curp: z.string().length(18, { message: 'El CURP debe tener 18 caracteres.' }),
   rfc: z.string().min(12, { message: 'El RFC debe tener al menos 12 caracteres.' }),
+  nss: z.string().min(11, { message: 'El NSS debe tener 11 caracteres.' }),
   address: z.string().min(10, { message: 'Dirección requerida.' }),
   // Step 3
   acceptContract: z.boolean().refine((val) => val === true, { message: 'Debes aceptar el contrato.' }),
@@ -55,8 +60,10 @@ export function RegistrationForm() {
       password: '',
       confirmPassword: '',
       fullName: '',
+      phone: '',
       curp: '',
       rfc: '',
+      nss: '',
       address: '',
       acceptContract: false,
       acceptSignature: false,
@@ -69,7 +76,10 @@ export function RegistrationForm() {
   const handleNext = async () => {
     let fieldsToValidate: (keyof FormData)[] = [];
     if (currentStep === 1) {
-      fieldsToValidate = ['email', 'password', 'confirmPassword', 'fullName', 'curp', 'rfc', 'address'];
+      fieldsToValidate = ['email', 'password', 'confirmPassword', 'fullName', 'phone', 'curp', 'rfc', 'nss', 'address'];
+    }
+     if (currentStep === 2) {
+      // Logic for document upload validation will go here
     }
     if (currentStep === 3) {
       fieldsToValidate = ['acceptContract', 'acceptSignature', 'signatureName'];
@@ -90,17 +100,66 @@ export function RegistrationForm() {
   };
 
   const onSubmit = async (data: FormData) => {
+    if(currentStep !== 5) return; // Only submit on the last step
     setIsLoading(true);
-    // This would trigger the final `submitApplication` cloud function
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    console.log('Form data submitted:', data);
-    toast({
-      title: '¡Solicitud Enviada!',
-      description: 'Hemos recibido tu solicitud. Nuestro equipo la revisará y te contactará pronto.',
-      variant: 'default',
-    });
-    router.push('/login');
-    setIsLoading(false);
+    try {
+      // 1. Create user in Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+      const user = userCredential.user;
+
+      // 2. Update user profile
+      await updateProfile(user, { displayName: data.fullName });
+
+      // 3. Create initial driver document in Firestore
+      // This part would ideally be a Cloud Function (onUserCreate)
+      // but we simulate it here for now.
+      const driverDocRef = doc(db, 'drivers', user.uid);
+      await setDoc(driverDocRef, {
+        uid: user.uid,
+        personalInfo: {
+          fullName: data.fullName,
+          email: data.email,
+          phone: data.phone,
+          address: data.address,
+          curp: data.curp,
+          rfc: data.rfc,
+          nss: data.nss,
+        },
+        // This is a placeholder, will be updated in step 2
+        vehicleInfo: { type: "Motocicleta", brand: "", plate: "" }, 
+        legal: {
+            contractVersion: "v1.2",
+            signatureTimestamp: Date.now(),
+            ipAddress: "NA" // Should capture user IP
+        },
+        documents: {}, // Will be populated in step 2
+        wallet: { currentBalance: 0, debtLimit: -500 },
+        proStatus: { level: "Bronce", points: 0 },
+        operationalStatus: 'pending_validation', // Changed from uninitialized
+        shipdayId: null,
+      });
+
+      // 4. In a real app, trigger submitApplication Cloud Function here
+
+      toast({
+        title: '¡Solicitud Enviada!',
+        description: 'Hemos recibido tu solicitud. Nuestro equipo la revisará y te contactará pronto.',
+        variant: 'default',
+      });
+      router.push('/login');
+
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error en el registro',
+        description: error.code === 'auth/email-already-in-use' 
+          ? 'Este correo electrónico ya está en uso.' 
+          : 'Ocurrió un error. Por favor, inténtalo de nuevo.',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const documents = [
@@ -138,8 +197,10 @@ export function RegistrationForm() {
                 <FormField name="fullName" render={({ field }) => <FormItem><FormLabel>Nombre Completo</FormLabel><FormControl><Input placeholder="Tu nombre completo" {...field} /></FormControl><FormMessage /></FormItem>} />
                 <FormField name="password" render={({ field }) => <FormItem><FormLabel>Contraseña</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage /></FormItem>} />
                 <FormField name="confirmPassword" render={({ field }) => <FormItem><FormLabel>Confirmar Contraseña</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage /></FormItem>} />
+                <FormField name="phone" render={({ field }) => <FormItem><FormLabel>Teléfono</FormLabel><FormControl><Input placeholder="3121234567" {...field} /></FormControl><FormMessage /></FormItem>} />
                 <FormField name="curp" render={({ field }) => <FormItem><FormLabel>CURP</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
                 <FormField name="rfc" render={({ field }) => <FormItem><FormLabel>RFC</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
+                 <FormField name="nss" render={({ field }) => <FormItem><FormLabel>NSS (IMSS)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
               </div>
               <FormField name="address" render={({ field }) => <FormItem><FormLabel>Dirección Completa</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} />
             </div>
@@ -148,7 +209,7 @@ export function RegistrationForm() {
           {currentStep === 2 && (
             <div>
               <h3 className="text-xl font-semibold">2. Carga de Documentos</h3>
-              <p className="text-muted-foreground mb-6">Sube cada documento en formato PDF o JPG.</p>
+              <p className="text-muted-foreground mb-6">Sube cada documento en formato PDF o JPG. Esta función se conectará a Cloud Storage.</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {documents.map(doc => (
                   <FormItem key={doc.id}>
@@ -226,11 +287,11 @@ export function RegistrationForm() {
               </Button>
             )}
             <div className="flex-grow"></div>
-            {currentStep < 5 && (
+            {currentStep < 5 ? (
               <Button type="button" onClick={handleNext}>
                 Siguiente
               </Button>
-            )}
+            ) : null}
           </div>
         </form>
       </div>

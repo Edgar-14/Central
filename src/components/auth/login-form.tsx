@@ -17,6 +17,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Por favor ingresa un correo válido.' }),
@@ -38,27 +40,39 @@ export function LoginForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    // In a real app, you'd call Firebase Auth here.
-    // e.g., await signInWithEmailAndPassword(auth, values.email, values.password);
-    
-    // Simulating API call and role-based redirect
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
+      const user = userCredential.user;
+      
+      // In a real app with roles, you would get the custom claim here.
+      // For now, we simulate it based on email.
+      // const idTokenResult = await user.getIdTokenResult();
+      // const role = idTokenResult.claims.role;
 
-    if (values.email.includes('admin')) {
+      if (values.email.includes('admin')) {
+         toast({
+            title: 'Inicio de Sesión Exitoso',
+            description: 'Bienvenido, Administrador.',
+        });
+        router.push('/admin/applications');
+      } else {
+         toast({
+            title: 'Inicio de Sesión Exitoso',
+            description: 'Bienvenido, Repartidor.',
+        });
+        router.push('/driver/dashboard');
+      }
+
+    } catch (error: any) {
+      console.error("Login error:", error);
       toast({
-        title: 'Inicio de Sesión Exitoso',
-        description: 'Bienvenido, Administrador.',
+        variant: 'destructive',
+        title: 'Error al iniciar sesión',
+        description: 'Las credenciales son incorrectas. Por favor, inténtalo de nuevo.',
       });
-      router.push('/admin/applications');
-    } else {
-      toast({
-        title: 'Inicio de Sesión Exitoso',
-        description: 'Bienvenido, Repartidor.',
-      });
-      router.push('/driver/dashboard');
+    } finally {
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
   }
 
   return (

@@ -1,7 +1,7 @@
-import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LoginForm } from '@/components/auth/login-form';
 import { Logo } from '@/components/shared/logo';
+import Link from 'next/link';
 
 export default function LoginPage() {
   return (
@@ -15,7 +15,9 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-md">
         <Card className="glass-card">
           <CardHeader className="text-center">
-            <Logo className="mb-4 justify-center" textClassName="text-2xl" />
+             <div className="mb-4 flex justify-center">
+                <Logo />
+             </div>
             <CardTitle className="text-2xl">Bienvenido de Nuevo</CardTitle>
             <CardDescription>Ingresa a tu portal de repartidor o administrador.</CardDescription>
           </CardHeader>
