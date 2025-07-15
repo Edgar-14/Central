@@ -1,18 +1,21 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Loader2, User, ShieldCheck, MoreVertical, Ban, UserX, AlertTriangle } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { Loader2, MoreVertical, Ban, UserX, AlertTriangle, Eye, CreditCard } from 'lucide-react';
 import type { Driver } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
+import { PayoutModal } from './payout-modal';
 
 const functions = getFunctions();
 const suspendDriver = httpsCallable(functions, 'suspenddriver');
@@ -23,10 +26,12 @@ export function DriversList() {
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [payoutDriver, setPayoutDriver] = useState<Driver | null>(null);
   const { toast } = useToast();
 
   const fetchActiveDrivers = async () => {
       setIsLoading(true);
+      setError(null);
       try {
         const driversQuery = query(
           collection(db, 'drivers'),
@@ -59,10 +64,8 @@ export function DriversList() {
             title: 'Acción completada',
             description: `${driverName} ha sido ${action === 'suspend' ? 'suspendido' : 'restringido'}.`,
         });
-        // Refresh list after action
         fetchActiveDrivers();
     } catch (err: any) {
-        console.error(`Failed to ${action} driver:`, err);
         toast({
             title: 'Error',
             description: `No se pudo completar la acción para ${driverName}. ${err.message}`,
@@ -73,38 +76,23 @@ export function DriversList() {
     }
   }
 
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-48">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <Alert variant="destructive">
-        <AlertTriangle className="h-4 w-4" />
-        <AlertTitle>Error</AlertTitle>
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
-    );
-  }
-
   return (
+    <>
     <Card>
       <CardHeader>
         <CardTitle>Repartidores Activos</CardTitle>
+        <CardDescription>Lista de todos los repartidores aprobados en la plataforma.</CardDescription>
       </CardHeader>
       <CardContent>
+       {isLoading && <div className="flex justify-center items-center h-48"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}
+       {error && <Alert variant="destructive"><AlertTriangle className="h-4 w-4" /><AlertTitle>Error</AlertTitle><AlertDescription>{error}</AlertDescription></Alert>}
+       {!isLoading && !error && (
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Nombre</TableHead>
-              <TableHead>Contacto</TableHead>
               <TableHead>Estatus Operativo</TableHead>
-              <TableHead className="text-right">Saldo</TableHead>
+              <TableHead className="text-right">Saldo en Billetera</TableHead>
               <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
@@ -112,14 +100,18 @@ export function DriversList() {
             {drivers.length > 0 ? (
               drivers.map((driver) => (
                 <TableRow key={driver.email}>
-                  <TableCell className="font-medium">{driver.fullName}</TableCell>
-                  <TableCell>{driver.email}</TableCell>
+                  <TableCell className="font-medium">
+                    <Link href={`/admin/drivers/${encodeURIComponent(driver.email)}`} className="hover:underline">
+                      {driver.fullName}
+                    </Link>
+                    <p className="text-xs text-muted-foreground">{driver.email}</p>
+                  </TableCell>
                   <TableCell>
                     <Badge variant={
                         driver.operationalStatus === 'active' ? 'default' 
                         : driver.operationalStatus === 'suspended' ? 'secondary' 
                         : 'destructive'
-                    }>
+                    } className="capitalize">
                         {driver.operationalStatus}
                     </Badge>
                   </TableCell>
@@ -133,12 +125,20 @@ export function DriversList() {
                                 {isProcessing === driver.email ? <Loader2 className="h-4 w-4 animate-spin" /> : <MoreVertical className="h-4 w-4" />}
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem asChild>
+                                <Link href={`/admin/drivers/${encodeURIComponent(driver.email)}`}><Eye className="mr-2 h-4 w-4" />Ver Detalles</Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setPayoutDriver(driver)}>
+                                <CreditCard className="mr-2 h-4 w-4" />
+                                Registrar Pago
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => handleDriverAction('restrict', driver.email, driver.fullName)}>
                                 <Ban className="mr-2 h-4 w-4" />
                                 Restringir por Deuda
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDriverAction('suspend', driver.email, driver.fullName)} className="text-destructive">
+                            <DropdownMenuItem onClick={() => handleDriverAction('suspend', driver.email, driver.fullName)} className="text-destructive focus:text-destructive">
                                 <UserX className="mr-2 h-4 w-4" />
                                 Suspender Cuenta
                             </DropdownMenuItem>
@@ -149,14 +149,25 @@ export function DriversList() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground">
-                  No hay repartidores para mostrar.
+                <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">
+                  No hay repartidores activos.
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
+       )}
       </CardContent>
     </Card>
+
+    {payoutDriver && (
+        <PayoutModal 
+            driver={payoutDriver}
+            isOpen={!!payoutDriver}
+            onClose={() => setPayoutDriver(null)}
+            onPayoutSuccess={fetchActiveDrivers}
+        />
+    )}
+    </>
   );
 }

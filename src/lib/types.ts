@@ -24,12 +24,13 @@ export interface LegalInfo {
 }
 
 export interface DocumentInfo {
-    ineUrl: string;
-    licenseUrl: string;
-    insuranceUrl: string;
-    addressProofUrl: string;
-    taxIdUrl: string;
-    circulationCardUrl: string;
+    ineUrl?: string;
+    licenseUrl?: string;
+    insuranceUrl?: string;
+    addressProofUrl?: string;
+    taxIdUrl?: string;
+    circulationCardUrl?: string;
+    trainingEvidenceUrl?: string;
 }
 
 export interface Wallet {
@@ -64,7 +65,7 @@ export interface Driver {
 export interface Transaction {
   id: string;
   date: Timestamp; // Using Firestore Timestamp
-  type: 'credit_delivery' | 'debit_commission' | 'payout';
+  type: 'credit_delivery' | 'debit_commission' | 'payout' | 'credit_tip';
   amount: number;
   orderId?: string;
   description: string;
