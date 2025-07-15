@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertCircle, ArrowDownCircle, ArrowUpCircle, Award } from 'lucide-react';
+import { AlertCircle, ArrowDownCircle, ArrowUpCircle, Award, Wallet } from 'lucide-react';
 import type { Driver, Transaction } from '@/lib/types';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';

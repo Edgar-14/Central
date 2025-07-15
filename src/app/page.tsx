@@ -48,9 +48,9 @@ export default function Home() {
   ];
 
   const sliderImages = [
-    { src: "https://i.ibb.co/HLRmsn53/IMG-9924.jpg", alt: "Driver on motorcycle", hint: "motorcycle delivery" },
-    { src: "https://i.ibb.co/GQ09Wf7/226A1559.jpg", alt: "BeFast delivery driver", hint: "delivery person" },
-    { src: "https://i.ibb.co/RpQSDQZJ/226A1568.jpg", alt: "Restaurant interior", hint: "restaurant interior" },
+    { src: "https://i.ibb.co/bX1V4z7/IMG-9924.jpg", alt: "Driver on motorcycle", hint: "motorcycle delivery" },
+    { src: "https://i.ibb.co/pPMrxYw/226-A1559.jpg", alt: "BeFast delivery driver", hint: "delivery person" },
+    { src: "https://i.ibb.co/M50gJ3k/226-A1568.jpg", alt: "Restaurant interior", hint: "restaurant interior" },
   ];
 
   return (
@@ -75,7 +75,7 @@ export default function Home() {
         <section className="relative w-full overflow-hidden">
           <div className="absolute inset-0 z-0">
              <Image
-              src="https://i.ibb.co/GQ09Wf7/226A1559.jpg"
+              src="https://i.ibb.co/pPMrxYw/226-A1559.jpg"
               alt="BeFast delivery driver"
               layout="fill"
               objectFit="cover"

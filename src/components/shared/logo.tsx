@@ -4,10 +4,9 @@ import { cn } from '@/lib/utils';
 
 interface LogoProps {
   className?: string;
-  textClassName?: string;
 }
 
-export function Logo({ className, textClassName }: LogoProps) {
+export function Logo({ className }: LogoProps) {
   return (
     <Link href="/" className={cn("flex items-center gap-2.5", className)}>
       <Image
