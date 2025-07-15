@@ -35,7 +35,7 @@ export function DriversList() {
       try {
         const driversQuery = query(
           collection(db, 'drivers'),
-          where('applicationStatus', '==', 'approved')
+          where('applicationStatus', 'in', ['approved', 'approved_manual_sync'])
         );
         
         const unsubscribe = onSnapshot(driversQuery, (querySnapshot) => {
