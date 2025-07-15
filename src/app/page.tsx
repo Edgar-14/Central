@@ -10,10 +10,26 @@ import { ThemeToggle } from '@/components/shared/theme-toggle';
 
 export default function Home() {
   const benefits = [
-    'Control total sobre tus ganancias',
-    'Horarios flexibles que se adaptan a ti',
-    'Soporte y comunidad de repartidores',
-    'Oportunidades de crecimiento y recompensas',
+    { 
+      title: 'Tus Prestaciones por Ley', 
+      description: 'Cuentas con IMSS, aguinaldo y vacaciones pagadas.' 
+    },
+    { 
+      title: 'Tú Tienes el Control', 
+      description: 'Elige cuándo y dónde trabajar, sin ninguna penalización.' 
+    },
+    { 
+      title: 'Tus Ganancias, Claras y a Tiempo', 
+      description: 'Recibes tu pago puntual y te quedas con todas tus propinas.' 
+    },
+    { 
+      title: 'Un Contrato que te Respalda', 
+      description: 'Tu trabajo está protegido con un contrato formal ante la ley.' 
+    },
+    { 
+      title: 'Estamos para Ayudarte', 
+      description: 'Un equipo de personas reales resuelve tus dudas y te da apoyo.' 
+    },
   ];
 
   const requirements = [
@@ -91,12 +107,13 @@ export default function Home() {
                 Ser parte de BeFast es más que solo repartir. Te ofrecemos las herramientas y el soporte para que triunfes.
                 </p>
             </div>
-            <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
               {benefits.map((benefit) => (
-                <Card key={benefit} className="glass-card text-center transition-all duration-300 hover:scale-105 hover:shadow-2xl">
-                  <CardContent className="p-6">
-                    <CheckCircle className="mx-auto h-12 w-12 text-primary" />
-                    <p className="mt-4 font-semibold">{benefit}</p>
+                <Card key={benefit.title} className="glass-card text-center transition-all duration-300 hover:scale-105 hover:shadow-2xl">
+                  <CardContent className="p-6 flex flex-col items-center justify-center h-full">
+                    <CheckCircle className="h-12 w-12 text-primary" />
+                    <h3 className="mt-4 font-semibold text-lg">{benefit.title}</h3>
+                    <p className="mt-2 text-muted-foreground text-sm">{benefit.description}</p>
                   </CardContent>
                 </Card>
               ))}
