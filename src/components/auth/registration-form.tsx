@@ -13,7 +13,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { Loader2, UploadCloud, FileText, Video, Award, Send, CheckCircle, Download } from 'lucide-react';
+import { Loader2, UploadCloud, FileText, Video, Award, Send, CheckCircle, Download, ExternalLink, Upload } from 'lucide-react';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth, storage } from '@/lib/firebase';
 import { getFunctions, httpsCallable } from 'firebase/functions';
@@ -56,6 +56,8 @@ const formSchema = z.object({
   acceptContract: z.boolean().refine((val) => val === true, { message: 'Debes aceptar el contrato.' }),
   acceptSignature: z.boolean().refine((val) => val === true, { message: 'Debes aceptar la validez de la firma.' }),
   signatureName: z.string().min(3, { message: 'Firma con tu nombre completo.' }),
+  // Step 4
+  trainingEvidenceUrl: fileSchema,
 }).refine(data => data.password === data.confirmPassword, {
   message: "Las contraseñas no coinciden.",
   path: ["confirmPassword"],
@@ -72,13 +74,21 @@ const documents: { name: string; id: keyof FormData }[] = [
     { name: 'Póliza de Seguro Vehicular', id: 'insuranceUrl' },
 ];
 
-const trainingModules = [
-    { id: 'module1', title: 'Introducción a BeFast y Nuestra App', duration: '5 min', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
-    { id: 'module2', title: 'Manejo de Pedidos y Tiempos de Entrega', duration: '10 min', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
-    { id: 'module3', title: 'Protocolos de Seguridad y Emergencias', duration: '8 min', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
-    { id: 'module4', title: 'Uso de la Billetera y Sistema de Pagos', duration: '7 min', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
-    { id: 'module5', title: 'Cuestionario de Evaluación Final', duration: '15 min', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+const trainingModules: {
+    id: string;
+    title: string;
+    duration: string;
+    type: 'video' | 'quiz' | 'upload';
+    content?: string; // URL for video or quiz link
+    fieldId?: keyof FormData; // Field ID for upload type
+}[] = [
+    { id: 'module1', title: 'Introducción a BeFast y Nuestra App', type: 'video', duration: '5 min', content: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+    { id: 'module2', title: 'Manejo de Pedidos y Tiempos de Entrega', type: 'video', duration: '10 min', content: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+    { id: 'module3', title: 'Protocolos de Seguridad y Emergencias', type: 'video', duration: '8 min', content: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+    { id: 'module4', title: 'Cuestionario de Evaluación Final', type: 'quiz', duration: '15 min', content: 'https://forms.gle/example' }, // Example link
+    { id: 'module5', title: 'Evidencia: Foto de tu Mochila Térmica', type: 'upload', duration: '2 min', fieldId: 'trainingEvidenceUrl' },
 ];
+
 
 const contractUrl = "https://firebasestorage.googleapis.com/v0/b/befast-central.appspot.com/o/legal%2FContrato-BeFast-Repartidor-Ejemplo.pdf?alt=media&token=e9e6a9a4-6b21-4d38-8e6e-21e3c83b8b05";
 
@@ -89,8 +99,6 @@ export function RegistrationForm() {
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const { toast } = useToast();
   const router = useRouter();
-
-  const allModulesCompleted = useMemo(() => completedModules.size === trainingModules.length, [completedModules]);
 
   const methods = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -109,6 +117,15 @@ export function RegistrationForm() {
       signatureName: '',
     },
   });
+
+  const allModulesCompleted = useMemo(() => {
+    return trainingModules.every(module => {
+        if (module.type === 'upload') {
+            return !!methods.watch(module.fieldId as keyof FormData);
+        }
+        return completedModules.has(module.id);
+    });
+  }, [completedModules, methods.watch()]);
 
   const progress = (currentStep / steps.length) * 100;
 
@@ -130,7 +147,7 @@ export function RegistrationForm() {
        if (currentStep === 4 && !allModulesCompleted) {
             toast({
                 title: "Capacitación Incompleta",
-                description: "Por favor, marca todos los módulos como completados para continuar.",
+                description: "Por favor, completa todas las tareas de capacitación para continuar.",
                 variant: "destructive"
             });
             return;
@@ -180,7 +197,8 @@ export function RegistrationForm() {
       
       // 3. Upload documents to Cloud Storage
       const documentUrls: { [key: string]: string } = {};
-      for (const doc of documents) {
+      const allDocsToUpload = [...documents, { name: 'Evidencia de Capacitación', id: 'trainingEvidenceUrl' }];
+      for (const doc of allDocsToUpload) {
           const file = data[doc.id] as File | undefined;
           if (file) {
             const path = `drivers/${uid}/${doc.id}_${file.name}`;
@@ -230,6 +248,14 @@ export function RegistrationForm() {
       setIsLoading(false);
     }
   };
+  
+  const getModuleIcon = (type: 'video' | 'quiz' | 'upload') => {
+    switch (type) {
+        case 'video': return <Video className="h-5 w-5 mr-2" />;
+        case 'quiz': return <ExternalLink className="h-5 w-5 mr-2" />;
+        case 'upload': return <Upload className="h-5 w-5 mr-2" />;
+    }
+  }
 
   return (
     <FormProvider {...methods}>
@@ -328,20 +354,20 @@ export function RegistrationForm() {
                     <a href={contractUrl} target="_blank" rel="noopener noreferrer">
                       <Button variant="outline" size="sm">
                         <Download className="mr-2 h-4 w-4" />
-                        Descargar PDF
+                        Descargar Contrato en PDF
                       </Button>
                     </a>
                   </div>
                 </CardHeader>
                 <CardContent className="p-2">
-                  <div className="w-full h-96 border rounded-md p-4 overflow-y-auto text-sm bg-white dark:bg-gray-800">
+                   <div className="w-full h-96 border rounded-md p-4 overflow-y-auto text-sm bg-white dark:bg-gray-800">
                     <h4 className="font-bold text-center mb-4">CONTRATO INDIVIDUAL DE TRABAJO POR TIEMPO INDETERMINADO</h4>
                     <p className="mb-2"><strong>Declaraciones:</strong></p>
                     <p className="mb-2">I. "El Patrón" declara ser una sociedad mercantil debidamente constituida conforme a las leyes de los Estados Unidos Mexicanos.</p>
                     <p className="mb-4">II. "El Trabajador" declara por su propio derecho ser una persona física de nacionalidad mexicana, con la capacidad legal para obligarse en los términos del presente contrato.</p>
                     <p className="mb-2"><strong>Cláusulas:</strong></p>
                     <p className="mb-2"><strong>PRIMERA.- Objeto.</strong> El presente contrato tiene por objeto establecer los términos y condiciones bajo los cuales "El Trabajador" prestará sus servicios personales subordinados a "El Patrón" en la posición de Repartidor...</p>
-                    <p>[... resto del contenido del contrato ...]</p>
+                    <p>[... El resto del contenido del contrato se puede visualizar en el PDF descargable ...]</p>
                   </div>
                 </CardContent>
               </Card>
@@ -366,14 +392,14 @@ export function RegistrationForm() {
           {currentStep === 4 && (
              <div className="space-y-6">
                 <h3 className="text-xl font-semibold">4. Capacitación Obligatoria</h3>
-                <p className="text-muted-foreground">Completa cada módulo y márcalo para poder continuar.</p>
+                <p className="text-muted-foreground">Completa cada módulo para poder continuar.</p>
                 <div className="space-y-3">
                     {trainingModules.map((module, index) => (
-                        <Card key={module.id} className={cn("transition-all", completedModules.has(module.id) && "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800")}>
+                        <Card key={module.id} className={cn("transition-all", (module.type !== 'upload' && completedModules.has(module.id)) || (module.type === 'upload' && !!methods.watch(module.fieldId as keyof FormData)) ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800" : "")}>
                             <CardContent className="p-4 flex items-center justify-between">
                                 <div className="flex items-center gap-4">
-                                    <div className={cn("h-10 w-10 rounded-full flex items-center justify-center font-bold text-lg", completedModules.has(module.id) ? "bg-green-600 text-white" : "bg-muted")}>
-                                        {completedModules.has(module.id) ? <CheckCircle /> : index + 1}
+                                     <div className={cn("h-10 w-10 rounded-full flex items-center justify-center font-bold text-lg", (module.type !== 'upload' && completedModules.has(module.id)) || (module.type === 'upload' && !!methods.watch(module.fieldId as keyof FormData)) ? "bg-green-600 text-white" : "bg-muted")}>
+                                        {(module.type !== 'upload' && completedModules.has(module.id)) || (module.type === 'upload' && !!methods.watch(module.fieldId as keyof FormData)) ? <CheckCircle /> : index + 1}
                                     </div>
                                     <div>
                                         <p className="font-semibold">{module.title}</p>
@@ -381,18 +407,39 @@ export function RegistrationForm() {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <Button type="button" variant="secondary" size="sm" onClick={() => setSelectedVideo(module.videoUrl)}>Ver Módulo</Button>
-                                    <Checkbox 
-                                        className="h-6 w-6"
-                                        checked={completedModules.has(module.id)}
-                                        onCheckedChange={() => toggleModuleCompletion(module.id)}
-                                    />
+                                     {module.type === 'video' && (
+                                        <>
+                                            <Button type="button" variant="secondary" size="sm" onClick={() => setSelectedVideo(module.content!)}>{getModuleIcon(module.type)} Ver Módulo</Button>
+                                            <Checkbox className="h-6 w-6" checked={completedModules.has(module.id)} onCheckedChange={() => toggleModuleCompletion(module.id)} />
+                                        </>
+                                    )}
+                                    {module.type === 'quiz' && (
+                                        <>
+                                            <a href={module.content} target="_blank" rel="noopener noreferrer"><Button type="button" variant="secondary" size="sm">{getModuleIcon(module.type)} Iniciar Cuestionario</Button></a>
+                                            <Checkbox className="h-6 w-6" checked={completedModules.has(module.id)} onCheckedChange={() => toggleModuleCompletion(module.id)} />
+                                        </>
+                                    )}
+                                    {module.type === 'upload' && module.fieldId && (
+                                        <FormField
+                                            control={methods.control}
+                                            name={module.fieldId}
+                                            render={({ field: { onChange } }) => (
+                                            <FormItem>
+                                                <FormControl>
+                                                <Button type="button" variant="secondary" size="sm" asChild>
+                                                    <label className="cursor-pointer flex items-center">{getModuleIcon(module.type)} Subir Evidencia<Input type="file" className="hidden" onChange={(e) => onChange(e.target.files?.[0])} /></label>
+                                                </Button>
+                                                </FormControl>
+                                            </FormItem>
+                                            )}
+                                        />
+                                    )}
                                 </div>
                             </CardContent>
                         </Card>
                     ))}
                 </div>
-                {allModulesCompleted && (
+                 {allModulesCompleted && (
                     <Alert variant="default" className="border-green-500 bg-green-50 dark:bg-green-900/20">
                         <CheckCircle className="h-4 w-4 !text-green-600" />
                         <AlertTitle className="text-green-700 dark:text-green-400">¡Capacitación Completa!</AlertTitle>
