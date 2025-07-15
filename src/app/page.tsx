@@ -19,7 +19,7 @@ export default function Home() {
       description: 'Elige cuándo y dónde trabajar, sin ninguna penalización.' 
     },
     { 
-      title: 'Tus Ganancias, Claras y a Tiempo', 
+      title: 'Tus Ganancias Claras', 
       description: 'Recibes tu pago puntual y te quedas con todas tus propinas.' 
     },
     { 
@@ -30,6 +30,10 @@ export default function Home() {
       title: 'Estamos para Ayudarte', 
       description: 'Un equipo de personas reales resuelve tus dudas y te da apoyo.' 
     },
+    {
+      title: 'Crece y Gana Más',
+      description: 'Reconocemos tu esfuerzo con bonos, incentivos y oportunidades.'
+    }
   ];
 
   const requirements = [
