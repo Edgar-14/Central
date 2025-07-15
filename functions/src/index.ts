@@ -3,20 +3,16 @@ import {initializeApp} from "firebase-admin/app";
 import {getAuth} from "firebase-admin/auth";
 import {getFirestore, FieldValue} from "firebase-admin/firestore";
 import {onCall, HttpsError} from "firebase-functions/v2/https";
-import {onRequest} from "firebase-functions/v2/https";
-import {beforeUserCreated} from "firebase-functions/v2/identity";
 import {defineString} from "firebase-functions/params";
-import fetch from "node-fetch";
 
 initializeApp();
 
 // Define secrets and parameters
 const SHIPDAY_API_KEY = defineString("SHIPDAY_API_KEY");
-const SHIPDAY_WEBHOOK_SECRET = defineString("SHIPDAY_WEBHOOK_SECRET");
 
 // 1. beforeUserCreate: Triggered before a new user is created in Firebase Auth.
 // It pre-creates a corresponding document in Firestore.
-export const setupnewuser = beforeUserCreated((event) => {
+export const setupnewuser = beforeUserCreated(async (event) => {
   const user = event.data;
   // Use email as the document ID for uniqueness
   const docId = user.email?.toLowerCase();
@@ -26,7 +22,7 @@ export const setupnewuser = beforeUserCreated((event) => {
 
   const driverDocRef = getFirestore().collection("drivers").doc(docId);
 
-  return driverDocRef.set({
+  await driverDocRef.set({
     uid: user.uid,
     email: docId,
     fullName: user.displayName || "",
@@ -175,8 +171,3 @@ export const restrictdriver = onCall<{driverId: string}>(async (request) => {
     await getFirestore().collection("drivers").doc(driverId).update({ operationalStatus: "restricted_debt" });
     return { success: true, message: "Repartidor restringido por deuda." };
 });
-
-// The webhook function can be added back here if needed in the future
-// export const shipdaywebhook = onRequest(async (req, res) => {
-//   // ... webhook logic
-// });

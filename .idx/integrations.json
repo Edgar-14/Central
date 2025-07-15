@@ -3,5 +3,6 @@
     "deploymentHostingUrl": "https://befast-central.web.app"
   },
   "cloud_run_deploy": {},
+  "google_maps_platform": {},
   "secrets_manager": {}
 }
