@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -37,19 +37,31 @@ export function DriversList() {
           collection(db, 'drivers'),
           where('applicationStatus', '==', 'approved')
         );
-        const querySnapshot = await getDocs(driversQuery);
-        const activeDrivers = querySnapshot.docs.map(doc => doc.data() as Driver);
-        setDrivers(activeDrivers);
+        
+        const unsubscribe = onSnapshot(driversQuery, (querySnapshot) => {
+          const activeDrivers = querySnapshot.docs.map(doc => doc.data() as Driver);
+          setDrivers(activeDrivers);
+          setIsLoading(false);
+        }, (err) => {
+           console.error("Error fetching active drivers:", err);
+           setError('No se pudo cargar la lista de repartidores.');
+           setIsLoading(false);
+        });
+
+        return () => unsubscribe();
+
       } catch (err) {
-        console.error("Error fetching active drivers:", err);
-        setError('No se pudo cargar la lista de repartidores.');
-      } finally {
+        console.error("Error setting up driver fetch:", err);
+        setError('No se pudo inicializar la carga de repartidores.');
         setIsLoading(false);
       }
     };
 
   useEffect(() => {
-    fetchActiveDrivers();
+    const unsubPromise = fetchActiveDrivers();
+    return () => {
+        unsubPromise.then(unsub => unsub && unsub());
+    };
   }, []);
   
   const handleDriverAction = async (action: 'suspend' | 'restrict', driverId: string, driverName: string) => {
@@ -64,7 +76,7 @@ export function DriversList() {
             title: 'Acción completada',
             description: `${driverName} ha sido ${action === 'suspend' ? 'suspendido' : 'restringido'}.`,
         });
-        fetchActiveDrivers();
+        // No need to call fetchActiveDrivers, onSnapshot will handle it.
     } catch (err: any) {
         toast({
             title: 'Error',
@@ -74,6 +86,10 @@ export function DriversList() {
     } finally {
         setIsProcessing(null);
     }
+  }
+
+  const refreshList = () => {
+      fetchActiveDrivers();
   }
 
   return (
@@ -165,7 +181,7 @@ export function DriversList() {
             driver={payoutDriver}
             isOpen={!!payoutDriver}
             onClose={() => setPayoutDriver(null)}
-            onPayoutSuccess={fetchActiveDrivers}
+            onPayoutSuccess={refreshList}
         />
     )}
     </>
