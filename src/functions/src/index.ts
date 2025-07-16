@@ -5,16 +5,19 @@ import {getAuth} from "firebase-admin/auth";
 import {getFirestore, FieldValue} from "firebase-admin/firestore";
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {onRequest} from "firebase-functions/v2/https";
-import {beforeUserCreated} from "firebase-functions/v2/identity";
 import {defineString} from "firebase-functions/params";
 import shipday from "../.api/apis/shipday";
+import * as logger from "firebase-functions/logger";
+
 
 initializeApp();
 
 const SHIPDAY_API_KEY = defineString("SHIPDAY_API_KEY");
 const SHIPDAY_WEBHOOK_SECRET = defineString("SHIPDAY_WEBHOOK_SECRET");
 
+// Initialize Shipday SDK with the API key from environment variables
 shipday.auth(SHIPDAY_API_KEY.value());
+
 
 export const registerNewUser = onCall<{email: string, password: string, fullName: string, phone: string}>(async (request) => {
     const { email, password, fullName, phone } = request.data;
@@ -37,7 +40,11 @@ export const registerNewUser = onCall<{email: string, password: string, fullName
             applicationStatus: "step1_account_created",
             operationalStatus: "uninitialized",
             createdAt: FieldValue.serverTimestamp(),
-            personalInfo: {},
+            personalInfo: {
+                fullName: fullName,
+                email: lowerCaseEmail,
+                phone: phone,
+            },
             vehicleInfo: {},
             legal: {},
             documents: {},
@@ -52,7 +59,7 @@ export const registerNewUser = onCall<{email: string, password: string, fullName
         if (error.code === 'auth/email-already-exists') {
             throw new HttpsError('already-exists', 'Este correo electrónico ya está en uso.');
         }
-        console.error("Error creating new user:", error);
+        logger.error("Error creating new user:", error);
         throw new HttpsError('internal', 'No se pudo completar el registro.');
     }
 });
@@ -99,14 +106,56 @@ export const approveapplication = onCall<{email: string}>(async (request) => {
     const driverData = driverDoc.data();
     if (!driverData) throw new HttpsError("internal", "No se pudieron leer los datos del repartidor.");
 
-    const { data: shipdayResult } = await shipday.insertDeliveryOrder({
+    try {
+        // First, check if driver already exists in Shipday to avoid duplicates
+        const existingDriversResponse = await shipday.deliveryOrdersQuery({ email: driverData.email } as any);
+        if (existingDriversResponse.data && existingDriversResponse.data.length > 0) {
+            const existingDriverId = existingDriversResponse.data[0].id;
+             await driverDocRef.update({ shipdayId: existingDriverId, applicationStatus: "approved", operationalStatus: "active" });
+            logger.info(`Driver ${email} already existed in Shipday. Updated with ID: ${existingDriverId}`);
+            return { success: true, message: "Repartidor ya existente en Shipday ha sido vinculado y activado." };
+        }
+    } catch(e) {
+        logger.warn("Could not check for existing driver in Shipday, proceeding to create.", e);
+    }
+
+    const shipdayResponse = await shipday.insertDeliveryOrder({
         name: driverData.fullName, 
         email: driverData.email, 
         phoneNumber: driverData.phone 
     } as any);
 
-    if (!shipdayResult || !(shipdayResult as any).id) {
-         throw new HttpsError("internal", `Error al crear el repartidor en Shipday.`);
+    let shipdayId;
+
+    if (shipdayResponse.status >= 200 && shipdayResponse.status < 300) {
+        // Handle potential empty response body on success
+        try {
+            const contentLength = shipdayResponse.headers['content-length'];
+            if (contentLength && parseInt(contentLength, 10) > 0) {
+                const shipdayResult = shipdayResponse.data as { id?: number };
+                shipdayId = shipdayResult?.id;
+            }
+        } catch (e) {
+             logger.warn("Could not parse JSON from Shipday driver creation, will try to find driver by email.", e);
+        }
+
+        // If ID wasn't in the response, fetch it
+        if (!shipdayId) {
+            try {
+                const driversList = await shipday.deliveryOrdersQuery({ email: driverData.email } as any);
+                if (driversList.data && driversList.data.length > 0) {
+                    shipdayId = driversList.data[0].id;
+                } else {
+                    throw new Error("Driver created in Shipday but could not retrieve ID.");
+                }
+            } catch (findError) {
+                logger.error("Error finding newly created Shipday driver by email:", findError);
+                throw new HttpsError("internal", "El repartidor se creó en Shipday, pero no se pudo obtener su ID para sincronizar.");
+            }
+        }
+
+    } else {
+         throw new HttpsError("internal", `Error al crear el repartidor en Shipday. Código: ${shipdayResponse.status}`);
     }
     
     await getAuth().setCustomUserClaims(driverData.uid, { role: "driver" });
@@ -114,7 +163,7 @@ export const approveapplication = onCall<{email: string}>(async (request) => {
     await driverDocRef.update({
         applicationStatus: "approved",
         operationalStatus: "active",
-        shipdayId: (shipdayResult as any).id,
+        shipdayId: shipdayId,
         approvedAt: FieldValue.serverTimestamp(),
         "wallet.debtLimit": -500,
     });
@@ -155,7 +204,7 @@ export const processAssignedOrder = onRequest(async (req, res) => {
     const snapshot = await q.get();
 
     if (snapshot.empty) {
-        console.warn(`Driver with Shipday ID ${driverId} not found in Firestore.`);
+        logger.warn(`Driver with Shipday ID ${driverId} not found in Firestore.`);
         res.status(404).send("Driver not found in our system.");
         return;
     }
@@ -169,10 +218,10 @@ export const processAssignedOrder = onRequest(async (req, res) => {
     if (isRestricted || hasExceededDebt) {
         try {
             await shipday.unassignOrderFromDriver({ orderId: orderId.toString() });
-            console.log(`Order ${orderId} successfully unassigned from driver ${driverData.fullName} due to debt.`);
+            logger.info(`Order ${orderId} successfully unassigned from driver ${driverData.fullName} due to debt.`);
             res.status(200).send("Order unassigned due to debt restriction.");
         } catch (error) {
-            console.error(`Failed to unassign order ${orderId} from driver ${driverId}:`, error);
+            logger.error(`Failed to unassign order ${orderId} from driver ${driverId}:`, error);
             res.status(500).send("Failed to unassign order.");
         }
     } else {
@@ -252,7 +301,7 @@ export const updateDriverWallet = onRequest(async (req, res) => {
         });
         res.status(200).send("Wallet updated successfully.");
     } catch (error) {
-        console.error(`Error procesando webhook para pedido ${orderId}:`, error);
+        logger.error(`Error procesando webhook para pedido ${orderId}:`, error);
         res.status(500).send("Internal Server Error");
     }
 });
@@ -307,7 +356,7 @@ export const recordPayout = onCall<{driverEmail: string, amount: number, notes?:
         });
         return { success: true, message: "Pago registrado exitosamente." };
     } catch (error) {
-        console.error("Error al registrar el pago:", error);
+        logger.error("Error al registrar el pago:", error);
         throw new HttpsError("internal", "No se pudo completar la transacción.");
     }
 });
@@ -322,7 +371,7 @@ export const updateOperationalSettings = onCall(async (request) => {
         await settingsRef.set(settingsData, { merge: true });
         return { success: true, message: "Ajustes operativos actualizados." };
     } catch (error) {
-        console.error("Error al guardar los ajustes operativos:", error);
+        logger.error("Error al guardar los ajustes operativos:", error);
         throw new HttpsError("internal", "No se pudieron guardar los ajustes.");
     }
 });

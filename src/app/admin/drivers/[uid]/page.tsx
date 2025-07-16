@@ -12,7 +12,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 
-export default function DriverDetailPage({ params }: { params: { uid: string } }) {
+interface DriverDetailPageProps {
+    params: {
+        uid: string;
+    };
+}
+
+export default function DriverDetailPage({ params }: DriverDetailPageProps) {
   const [driver, setDriver] = useState<Driver | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,6 +34,7 @@ export default function DriverDetailPage({ params }: { params: { uid: string } }
     const fetchDriverProfile = async () => {
       setIsLoading(true);
       try {
+        // Since the UID from the URL is the email, which is the document ID.
         const driverDocRef = doc(db, 'drivers', uid);
         const driverDocSnap = await getDoc(driverDocRef);
 
