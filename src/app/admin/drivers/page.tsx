@@ -1,7 +1,6 @@
-
-import { DriversList } from "@/components/admin/drivers-list";
 import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
+import { DriversList } from "@/components/admin/drivers-list";
 
 export default function AdminDriversPage() {
   return (

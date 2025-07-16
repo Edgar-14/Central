@@ -1,5 +1,6 @@
 {
   "firebase_hosting": {
     "deploymentHostingUrl": "https://befast-central.web.app"
-  }
+  },
+  "gemini_api": {}
 }

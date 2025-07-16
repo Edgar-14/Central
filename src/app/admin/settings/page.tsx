@@ -18,3 +18,4 @@ export default function AdminSettingsPage() {
     </div>
   );
 }
+S
